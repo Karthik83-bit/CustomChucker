@@ -96,3 +96,8 @@ dependencies {
     implementation (libs.androidx.runtime.livedata)
 
 }
+tasks {
+    withType<PublishToMavenLocal>().configureEach {
+        dependsOn("assemble")
+    }
+}
