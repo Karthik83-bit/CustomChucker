@@ -9,13 +9,11 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.isu.apitracker.domain.Repository
 import com.isu.apitracker.presentation.screens.ApiListDataClass
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import javax.inject.Inject
 
-@HiltViewModel
-class ApiTrackerViewModel @Inject constructor(val repository: Repository):ViewModel() {
+
+class ApiTrackerViewModel (val repository: Repository):ViewModel() {
 
     var selectedApi: MutableState<ApiListDataClass?> = mutableStateOf(null)
     val apiList= mutableStateListOf<ApiListDataClass>()

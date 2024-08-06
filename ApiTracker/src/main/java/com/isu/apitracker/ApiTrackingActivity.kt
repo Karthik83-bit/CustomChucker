@@ -10,16 +10,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
+import com.isu.apitracker.data.RepositoryImplementation
+import com.isu.apitracker.domain.Repository
 import com.isu.apitracker.presentation.screens.ApiListScreen
 import com.isu.apitracker.presentation.screens.RequestResponseScreen
 import com.isu.apitracker.ui.theme.CustomChuckerTheme
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
+
+
 class ApiTrackingActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +34,18 @@ class ApiTrackingActivity : ComponentActivity() {
         setContent {
             CustomChuckerTheme {
                 val navController= rememberNavController()
-                val viewModel:ApiTrackerViewModel= hiltViewModel()
+                val db= Room
+                    .databaseBuilder(
+                        this,
+                        AppDatabase::class.java,
+                        "app_database"
+                    )
+                    .fallbackToDestructiveMigration().build()
+                val dao=db.transactionDataDao()
+                val apiTrackerRepository:Repository = RepositoryImplementation(dao)
+                val viewModelFactory= ViewModelFactory(apiTrackerRepository)
+                val viewModel=ViewModelProvider(this,viewModelFactory).get(ApiTrackerViewModel::class.java)
+
                 NavHost(navController =navController , startDestination ="HomeScreen" ) {
                     composable("HomeScreen"){
                         ApiListScreen(navController, viewModel)

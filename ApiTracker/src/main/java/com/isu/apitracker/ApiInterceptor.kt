@@ -10,9 +10,8 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
-import javax.inject.Inject
 
-class ApiInterceptor @Inject constructor(
+class ApiInterceptor(
     private val context: Context,
     private val listOfDecoder: List<BodyDecoder>? = null,
 ) : Interceptor {
