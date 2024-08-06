@@ -1,0 +1,4 @@
+<resources>
+    <string name="title_activity_api_tracker">ApiTrackerActivity</string>
+    <string name="title_activity_api_tracking">ApiTrackingActivity</string>
+</resources>
