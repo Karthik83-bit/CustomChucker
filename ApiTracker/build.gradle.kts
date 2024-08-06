@@ -48,7 +48,36 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
+
+publishing {
+    /*
+    * ./gradlew publishToMavenLocal
+    * Use this command to publish the library
+    * */
+    publications {
+        create<MavenPublication>("mavenAar") {
+            groupId = "com.isu"
+            artifactId = "apitracker"
+//            version = "1.0.0_stag"  // Staging
+            version = "1.0.0"  // Production
+
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = uri("file://${layout.buildDirectory}/repo")
+        }
+    }
+
+}
+
+
 
 
 dependencies {
