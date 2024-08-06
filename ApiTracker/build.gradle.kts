@@ -123,7 +123,7 @@ dependencies {
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation(libs.androidx.room.ktx)
     //to observe livedata as state
-    implementation (libs.androidx.runtime.livedata)
+
 
 }
 tasks {
