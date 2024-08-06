@@ -57,6 +57,7 @@ publishing {
     * Use this command to publish the library
     * */
     publications {
+
         create<MavenPublication>("mavenAar") {
             groupId = "com.isu"
             artifactId = "apitracker"
