@@ -44,8 +44,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.isu.apitracker.ApiTrackerViewModel
+import com.isu.apitracker.presentation.ApiTrackerViewModel
 import com.isu.apitracker.ApiTrackingActivity
+import com.isu.apitracker.toEm
 
 
 data class ApiListDataClass(
@@ -55,15 +56,17 @@ data class ApiListDataClass(
     val requestEndPoint: String = "/jdsjlkds/lksdjklj",
     val requestBaseURL: String = "com.google",
     val callTime: String = System.currentTimeMillis().toString(),
-    val responseTime: Long = 418,
+    val responseTime: String = "",
+
     val memoryConsumption: Long = 26,
     val request: String = "",
-    val requestHeaders: String = "",
+    val requestHeaders: Map<String, String> = mapOf(),
     val response: String = "",
-    val responseHeaders: String = "",
+    val responseHeaders: Map<String, String> = mapOf(),
     val delete: Boolean = false,
-    val decodedRequest:String="",
-    val decodedOutput: String="",
+    val decodedRequest: List<String?> = emptyList(),
+    val decodedOutput: List<String?> = emptyList(),
+    val startTime: String,
 )
 
 @Preview
@@ -101,7 +104,7 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                     Modifier.fillMaxHeight(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "SELECT ALL", modifier = Modifier.clickable {
+                    Text(lineHeight=12.sp.toEm(),text = "SELECT ALL", modifier = Modifier.clickable {
                         selectAll.value = true
                         viewModel.selectedApiToDelete.addAll(
                             viewModel.apiList.toList().map { it.id })
@@ -231,16 +234,16 @@ private fun ApiListItem(
                 Row(){
                     Column {
 
-                        Text(
+                        Text(lineHeight=12.sp.toEm(),
                             text = "${data.requestMethod}",
                             fontWeight = FontWeight(500),
-                            fontSize = 20.sp,
+                            fontSize = 20.sp.toEm(),
                             fontStyle = FontStyle.Italic
                         )
-                        Text(
+                        Text(lineHeight=12.sp.toEm(),
                             text = data.statusCode.toString(),
                             fontWeight = FontWeight(700),
-                            fontSize = 16.sp,
+                            fontSize = 18.sp.toEm(),
                             fontStyle = FontStyle.Normal
                         )
                     }
@@ -250,20 +253,21 @@ private fun ApiListItem(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
 
-                        Text(
+                        Text(lineHeight=12.sp.toEm(),
                             text = "${data.requestEndPoint}",
                             fontWeight = FontWeight(500),
-                            fontSize = 15.sp,
+                            fontSize = 19.sp.toEm(),
                             fontStyle = FontStyle.Italic
                         )
-                        Text(text = "${data.requestBaseURL}")
+
 
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = "${data.callTime}")
-                    Text(text = "${data.responseTime}")
-                    Text(text = "${data.memoryConsumption} B")
+                    Text(lineHeight=12.sp.toEm(),text = "${data.callTime}")
+                    Text(lineHeight=12.sp.toEm(),text = "${data.startTime}")
+                    Text(lineHeight=12.sp.toEm(),text = "${data.responseTime}")
+                    Text(lineHeight=12.sp.toEm(),text = "${data.memoryConsumption} B")
                 }
             }
 

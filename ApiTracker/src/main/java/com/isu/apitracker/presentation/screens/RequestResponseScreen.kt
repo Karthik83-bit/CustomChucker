@@ -8,16 +8,9 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,242 +22,297 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.isu.apitracker.ApiTrackerViewModel
+import com.isu.apitracker.presentation.ApiTrackerViewModel
 import com.isu.apitracker.R
 import com.isu.apitracker.presentation.screens.TabConstants.tabs
-import org.json.JSONObject
+import com.isu.apitracker.toEm
 
 object TabConstants {
-    const val REQUEST_TAB = "Request"
-    const val RESPONSE_TAB = "Response"
+    private const val REQUEST_TAB = "Request"
+    private const val RESPONSE_TAB = "Response"
     val tabs = listOf(REQUEST_TAB, RESPONSE_TAB)
-
 }
 
+/**
+ * Composable function to display the Request/Response screen.
+ *
+ * @param navController Navigation controller to manage navigation.
+ * @param viewModel ViewModel to provide data and handle logic.
+ */
 @Composable
 fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTrackerViewModel) {
-    val selectedTabIndex = remember {
-        mutableStateOf(0)
-    }
+    val selectedTabIndex = remember { mutableStateOf(0) }
 
     Scaffold(
         containerColor = Color.LightGray.copy(0.5f),
         topBar = {
-            Row (
+            Row(
                 Modifier
                     .height(60.dp)
                     .fillMaxWidth()
-                    .background(Color.White)){
-
+                    .background(Color.White)
+            ) {
+                tabs.forEachIndexed { index, tab ->
                     Column(
                         Modifier
-                            .fillMaxWidth(0.5f)
-                            .fillMaxHeight()) {
+                            .weight(1f)
+                            .fillMaxHeight()
+                    ) {
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth(1f)
+                                .fillMaxWidth()
                                 .height(50.dp)
                                 .clickable(
                                     interactionSource = MutableInteractionSource(),
                                     indication = null
                                 ) {
-                                    selectedTabIndex.value = 0
+                                    selectedTabIndex.value = index
                                 },
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
-                        ){
-                            Text(text = tabs[0])
+                        ) {
+                            Text(lineHeight=12.sp.toEm(),text = tab)
                         }
-                        AnimatedVisibility(visible = selectedTabIndex.value==0, enter = scaleIn(), exit = scaleOut()) {
-                            Row (modifier = Modifier
-                                .height(5.dp)
-                                .fillMaxWidth()
-                                .background(Color.Gray)){
+                        AnimatedVisibility(
+                            visible = selectedTabIndex.value == index,
+                            enter = scaleIn(),
+                            exit = scaleOut()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .height(5.dp)
+                                    .fillMaxWidth()
+                                    .background(Color.Gray)
+                            ){
 
                             }
                         }
                     }
-                Column(Modifier
-                        .fillMaxWidth(1f)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(1f)
-                                .height(50.dp)
-                                .clickable(
-                                    interactionSource = MutableInteractionSource(),
-                                    indication = null
-                                ) {
-                                    selectedTabIndex.value = 1
-                                },
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ){
-                            Text(text = tabs[1])
-                        }
-                        AnimatedVisibility(visible = selectedTabIndex.value==1, enter = scaleIn(), exit = scaleOut()) {
-                            Row (modifier = Modifier
-                                .height(5.dp)
-                                .fillMaxWidth()
-                                .background(Color.Gray)){
-
-                            }
-                        }
-                    }
-
-
+                }
             }
         }
     ) { innerPadding ->
-        val copyManager=LocalClipboardManager.current
-        AnimatedVisibility(visible = selectedTabIndex.value==0,enter= slideInHorizontally { -it }, exit = slideOutHorizontally { -it }) {
-            Column(
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = innerPadding.calculateTopPadding(),
-                        16.dp
-                    )
+        val copyManager = LocalClipboardManager.current
+        val apiData = viewModel.selectedApi.value
 
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column (Modifier.padding(top = 16.dp)){
-                    Text(text = "Headers:", fontWeight = FontWeight.Bold)
-                    Text(text = viewModel.selectedApi.value?.requestHeaders?.replace("""\""","")?.split(",")?.joinToString (",\n")?:"No headers")
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(text = "Request:", fontWeight = FontWeight.Bold)
-                if(viewModel.selectedApi.value?.request!=null||viewModel.selectedApi.value?.request?.isNotEmpty()==true){
-                    Column(modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .background(
-                            Color(
-                                0xF0141414
-                            )
-                        )
-                        .padding(16.dp),){
-                        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End){
-                            IconButton(onClick = { /*TODO*/ }, modifier = Modifier) {
-                                Icon(painter = painterResource(id =R.drawable.baseline_content_copy_24 ) , contentDescription = "", tint = Color.LightGray)
-                            }
-                        }
-                        Text(text = viewModel.selectedApi.value?.request?:"No response found", color = Color.White)
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Column(modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .background(
-                            Color(
-                                0xF0141414
-                            )
-                        )
-                        .padding(16.dp),)
-                    {
-                        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End){
-                            IconButton(onClick = {
-                                if(viewModel.selectedApi.value?.response!=null && viewModel.selectedApi.value?.response!!.isNotEmpty()==true){
-                                    copyManager.setText(AnnotatedString("${viewModel.selectedApi.value?.decodedRequest}"))
-                                }
-
-                            }, modifier = Modifier) {
-                                Icon(painter = painterResource(id =R.drawable.baseline_content_copy_24 ) , contentDescription = "", tint = Color.LightGray)
-                            }
-                        }
-
-
-                        Text(text = viewModel.selectedApi.value?.decodedRequest?:"No response found", color = Color.White)
-                    }
-                }
-
-
-
-            }
-        }
-        AnimatedVisibility(visible = selectedTabIndex.value==1,enter= slideInHorizontally { it }, exit = slideOutHorizontally { it }) {
-            Column(
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = innerPadding.calculateTopPadding(),
-                        16.dp
-                    )
-
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column (Modifier.padding(top = 16.dp)){
-                    Text(text = "Headers:", fontWeight = FontWeight.Bold)
-                    Text(text = viewModel.selectedApi.value?.responseHeaders?.replace("""\""","")?.split(",")?.joinToString (",\n")?:"No headers")
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(text = "Response:", fontWeight = FontWeight.Bold)
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .background(
-                        Color(
-                            0xF0141414
-                        )
-                    )
-                    .padding(16.dp),)
-                {
-                    Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End){
-                        IconButton(onClick = {
-                            if(viewModel.selectedApi.value?.response!=null && viewModel.selectedApi.value?.response!!.isNotEmpty()==true){
-                                copyManager.setText(AnnotatedString("${viewModel.selectedApi.value?.response}"))
-                            }
-
-                        }, modifier = Modifier) {
-                            Icon(painter = painterResource(id =R.drawable.baseline_content_copy_24 ) , contentDescription = "", tint = Color.LightGray)
-                        }
-                    }
-
-
-                    Text(text = viewModel.selectedApi.value?.response?:"No response found", color = Color.White)
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(text = "DecodedResponse:", fontWeight = FontWeight.Bold)
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .background(
-                        Color(
-                            0xF0141414
-                        )
-                    )
-                    .padding(16.dp),)
-                {
-                    Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End){
-                        IconButton(onClick = {
-                            if(viewModel.selectedApi.value?.response!=null && viewModel.selectedApi.value?.response!!.isNotEmpty()==true){
-                                copyManager.setText(AnnotatedString("${viewModel.selectedApi.value?.response}"))
-                            }
-
-                        }, modifier = Modifier) {
-                            Icon(painter = painterResource(id =R.drawable.baseline_content_copy_24 ) , contentDescription = "", tint = Color.LightGray)
-                        }
-                    }
-
-
-                    Text(text = viewModel.selectedApi.value?.decodedOutput?:"No response found", color = Color.White)
-                }
-
-
-            }
+        AnimatedVisibility(
+            visible = selectedTabIndex.value == 0,
+            enter = slideInHorizontally { -it },
+            exit = slideOutHorizontally { -it }
+        ) {
+            RequestContent(innerPadding, apiData, copyManager)
         }
 
+        AnimatedVisibility(
+            visible = selectedTabIndex.value == 1,
+            enter = slideInHorizontally { it },
+            exit = slideOutHorizontally { it }
+        ) {
+            ResponseContent(innerPadding, apiData, copyManager)
+        }
     }
 }
 
+/**
+ * Composable function to display the Request content.
+ *
+ * @param innerPadding Padding values from the Scaffold.
+ * @param apiData Data to display.
+ * @param copyManager Clipboard manager to handle copying text.
+ */
+@Composable
+fun RequestContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, copyManager: ClipboardManager) {
+    Column(
+        modifier = Modifier
+            .padding(
+                start = 16.dp,
+                top = innerPadding.calculateTopPadding(),
+                end = 16.dp
+            )
+            .verticalScroll(rememberScrollState())
+    ) {
+        Column(Modifier.padding(top = 16.dp)) {
+            Text(lineHeight=12.sp.toEm(),text = "Headers", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+            apiData?.requestHeaders?.forEach {
+                SelectionContainer {
+                    Row(modifier = Modifier.fillMaxWidth()){
+                        Row(modifier = Modifier.weight(1f)){
+                            Text(lineHeight=12.sp.toEm(),
+                                text = it.key+":",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Row(modifier = Modifier.weight(1f)){
+                            Text(lineHeight=12.sp.toEm(),
+                                text = processedRequest(it.value).replace("[","").replace("]","")
+                            )
+                        }
+                    }
 
+                }
+            }
+
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(lineHeight=12.sp.toEm(),text = "Request:", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+        RequestSection(apiData?.request, copyManager)
+
+        Spacer(modifier = Modifier.height(10.dp))
+        apiData?.decodedRequest?.forEachIndexed { index, decodedRequest ->
+            Text(lineHeight=12.sp.toEm(),text = "DecodedRequest:${index + 1}", fontWeight = FontWeight.Bold)
+            RequestSection(decodedRequest, copyManager)
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+    }
+}
+
+/**
+ * Composable function to display a section of the request content.
+ *
+ * @param requestText Text to display.
+ * @param copyManager Clipboard manager to handle copying text.
+ */
+@Composable
+fun RequestSection(requestText: String?, copyManager: ClipboardManager) {
+    if (!requestText.isNullOrEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(Color(0xF0141414))
+                .padding(16.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(
+                    onClick = {
+                        if (requestText.isNotEmpty()) {
+                            copyManager.setText(AnnotatedString(requestText))
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_content_copy_24),
+                        contentDescription = null,
+                        tint = Color.LightGray
+                    )
+                }
+            }
+            Text(lineHeight=12.sp.toEm(),text = processedRequest(requestText) ?: "No response found", color = Color.White)
+        }
+    }
+}
+
+/**
+ * Composable function to display the Response content.
+ *
+ * @param innerPadding Padding values from the Scaffold.
+ * @param apiData Data to display.
+ * @param copyManager Clipboard manager to handle copying text.
+ */
+@Composable
+fun ResponseContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, copyManager: ClipboardManager) {
+    Column(
+        modifier = Modifier
+            .padding(
+                start = 16.dp,
+                top = innerPadding.calculateTopPadding(),
+                end = 16.dp
+            )
+            .verticalScroll(rememberScrollState())
+    ) {
+        Column(Modifier.padding(top = 16.dp)) {
+            Text(lineHeight=12.sp.toEm(),text = "Headers", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+            apiData?.responseHeaders?.forEach {
+                SelectionContainer {
+                    Row(modifier = Modifier.fillMaxWidth()){
+                        Row(modifier = Modifier.weight(1f)){
+                            Text(lineHeight=12.sp.toEm(),
+                                text = it.key+":",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Row(modifier = Modifier.weight(1f)){
+                            Text(lineHeight=12.sp.toEm(),
+                                text = processedRequest(it.value).replace("[","").replace("]","")
+                            )
+                        }
+                    }
+
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(lineHeight=12.sp.toEm(),text = "Response:", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+        ResponseSection(apiData?.response, copyManager)
+
+        Spacer(modifier = Modifier.height(10.dp))
+        apiData?.decodedOutput?.forEachIndexed { index, decodedOutput ->
+            Text(lineHeight=12.sp.toEm(),text = "DecodedResponse: ${index + 1}", fontWeight = FontWeight.Bold)
+            ResponseSection(decodedOutput, copyManager)
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+    }
+}
+
+/**
+ * Composable function to display a section of the response content.
+ *
+ * @param responseText Text to display.
+ * @param copyManager Clipboard manager to handle copying text.
+ */
+@Composable
+fun ResponseSection(responseText: String?, copyManager: ClipboardManager) {
+    if (!responseText.isNullOrEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(Color(0xF0141414))
+                .padding(16.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(
+                    onClick = {
+                        if (responseText.isNotEmpty()) {
+                            copyManager.setText(AnnotatedString(responseText))
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_content_copy_24),
+                        contentDescription = null,
+                        tint = Color.LightGray
+                    )
+                }
+            }
+            Text(lineHeight=12.sp.toEm(),text = processedRequest(responseText) ?: "No response found", color = Color.White)
+        }
+    }
+}
+
+/**
+ * Processes a given request string to remove the first and last quotes if present.
+ *
+ * @param request The request string to process.
+ * @return The processed request string.
+ */
+fun processedRequest(request: String): String{
+    return request.replaceFirst("\"", "").reversed().replaceFirst("\"", "").reversed()
+}

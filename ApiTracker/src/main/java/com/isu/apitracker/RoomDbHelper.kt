@@ -24,14 +24,17 @@ data class TransactionData(
     @ColumnInfo(name = "response")
     val response: String,
 
-    @ColumnInfo(name = "time")
+    @ColumnInfo(name = "recordtime")
+    val recordTime: String,
+
+    @ColumnInfo(name = "starttime")
     val time: String,
 
     @ColumnInfo(name = "decoderRequest")
-    val decoderRequest: String,
+    val decoderRequest: List<String?>,
 
     @ColumnInfo(name = "decoderResponse")
-    val decoderResponse: String,
+    val decoderResponse: List<String?>,
 
 
 )

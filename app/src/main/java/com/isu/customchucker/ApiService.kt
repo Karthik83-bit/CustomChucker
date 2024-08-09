@@ -1,7 +1,7 @@
 package com.isu.customchucker
 
 import android.content.Context
-import com.isu.apitracker.ApiInterceptor
+import com.isu.apitracker.presentation.ApiInterceptor
 import okhttp3.OkHttpClient
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -30,7 +30,7 @@ interface ApiService {
         private fun getClient(context: Context): OkHttpClient {
             val client=OkHttpClient
                 .Builder()
-                .addInterceptor(ApiInterceptor(context=context, listOf(EncryptDecryptDecoder())))
+                .addInterceptor(ApiInterceptor(context=context))
                 .build()
             return client
         }

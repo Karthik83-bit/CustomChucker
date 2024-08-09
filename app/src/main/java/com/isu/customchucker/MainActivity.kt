@@ -24,7 +24,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import com.google.gson.Gson
+import com.isu.apitracker.toEm
 import com.isu.customchucker.ui.theme.CustomChuckerTheme
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +57,7 @@ class MainActivity : ComponentActivity() {
                       if(text.value.isEmpty()){
                           CircularProgressIndicator()
                       }else{
-                          Text(text=text.value)
+                          Text(lineHeight=16.sp.toEm(),text=text.value)
                       }
                               Button(onClick = {
                           callApi(onLoading = {},onSucess = {
@@ -64,7 +66,7 @@ class MainActivity : ComponentActivity() {
                               text.value=it
                           })
                       }) {
-                          Text("Test")
+                          Text(lineHeight=14.sp.toEm(), text = "Test")
                       }
                   }
                 }
@@ -110,7 +112,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
+    Text(lineHeight=16.sp.toEm(),
         text = "Hello $name!",
         modifier = modifier
     )
