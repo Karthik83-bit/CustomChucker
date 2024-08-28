@@ -1,4 +1,4 @@
-package com.isu.apitracker.presentation
+package com.isu.apitracker.presentation.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.isu.apitracker.domain.Repository
 import com.isu.apitracker.presentation.screens.ApiListDataClass
 import kotlinx.coroutines.launch
@@ -26,8 +25,8 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
     var selectedApi: MutableState<ApiListDataClass?> = mutableStateOf(null)
     val apiList = mutableStateListOf<ApiListDataClass>()
     val selectedApiToDelete = mutableStateListOf<Int>()
-    val requestHeaders = mutableMapOf<String, String>()
-    val responseHeaders = mutableMapOf<String, String>()
+    private val requestHeaders = mutableMapOf<String, String>()
+    private val responseHeaders = mutableMapOf<String, String>()
 
     /**
      * Fetches all API data and updates the UI list.
@@ -36,27 +35,26 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             val list = repository.getAllApiData()
             Log.d("apiData", "getAllApi: $list")
-            var reqHeader = ""
-            var respHeader = ""
+            var reqHeader:Map<String,List<String>> = emptyMap()
+            var respHeader:Map<String,List<String>> = emptyMap()
             var reqBody = ""
             var respBody = ""
             var date = ""
             val uiList = list.map {
                 try {
-                    val requestObj = JSONObject(it.request)
-                    val responseObj = JSONObject(it.response)
-                    reqHeader = requestObj.getString("headers")
-                    respHeader = responseObj.getString("headers")
+                    reqBody = it.request
+                     respBody = it.response
+                    reqHeader = it.requestHeaders
+                    respHeader = it.responseHeaders
 
-                    JSONObject(reqHeader).keys().forEach { key ->
-                        requestHeaders[key] = JSONObject(reqHeader).get(key).toString()
-                    }
-                    JSONObject(respHeader).keys().forEach { key ->
-                        responseHeaders[key] = JSONObject(respHeader).get(key).toString()
+                   reqHeader.forEach {
+                       requestHeaders.put(it.key,it.value.reduce({acc, s -> acc+s+"\n"}) )
+                   }
+                    respHeader.forEach {
+                        responseHeaders.put(it.key,it.value.reduce({acc, s -> acc+s+"\n"}) )
                     }
                     date = getCurrentDateWithoutTime()
-                    reqBody = processJson(Gson().toJson(requestObj.getString("body")))
-                    respBody = processJson(Gson().toJson(responseObj.getString("body")))
+
 
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -104,15 +102,21 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
      * @param str The JSON string to process.
      * @return The processed JSON string.
      */
-    fun processJson(str: String): String {
-        return str.replace("""\\\"""", "")
-            .replace("""\"""", "\"")
-            .split("{")
-            .joinToString("{\n ")
-            .split(",")
-            .joinToString(",\n")
-            .split("}")
-            .joinToString("\n}\n")
+    private fun processJson(str: String): String {
+        val jsonObject = JSONObject(str)
+
+        // Return the pretty-printed JSON string with an indentation of 4 spaces
+        val result=jsonObject.toString(4)
+        Log.d("beautyResult", "processJson:$result ")
+        return result
+//        return str.replace("""\\\"""", "")
+//            .replace("""\"""", "\"")
+//            .split("{")
+//            .joinToString("{\n ")
+//            .split(",")
+//            .joinToString(",\n")
+//            .split("}")
+//            .joinToString("\n}\n")
     }
 
     /**

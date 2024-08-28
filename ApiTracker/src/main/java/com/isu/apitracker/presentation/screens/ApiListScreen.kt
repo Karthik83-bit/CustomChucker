@@ -36,7 +36,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Green
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -44,9 +47,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.isu.apitracker.presentation.ApiTrackerViewModel
-import com.isu.apitracker.ApiTrackingActivity
-import com.isu.apitracker.toEm
+import com.isu.apitracker.presentation.viewmodel.ApiTrackerViewModel
+import com.isu.apitracker.presentation.ApiTrackingActivity
+import com.isu.apitracker.util.toEm
 
 
 data class ApiListDataClass(
@@ -57,7 +60,6 @@ data class ApiListDataClass(
     val requestBaseURL: String = "com.google",
     val callTime: String = System.currentTimeMillis().toString(),
     val responseTime: String = "",
-
     val memoryConsumption: Long = 26,
     val request: String = "",
     val requestHeaders: Map<String, String> = mapOf(),
@@ -68,6 +70,8 @@ data class ApiListDataClass(
     val decodedOutput: List<String?> = emptyList(),
     val startTime: String,
 )
+
+
 
 @Preview
 @Composable
@@ -83,11 +87,13 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
     LaunchedEffect(key1 = Unit) {
         viewModel.getAllApi()
     }
+
     Scaffold(containerColor = Color.White, topBar = {
         if (addItemsToDelete.value) {
             Row(
                 modifier = Modifier
                     .height(50.dp)
+                    .shadow(1.dp)
                     .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row {
@@ -124,6 +130,7 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
             Row(
                 modifier = Modifier
                     .height(50.dp)
+                    .shadow(1.dp)
                     .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row {
@@ -147,6 +154,7 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
         }
     }) { padding ->
         LazyColumn(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
+
 
             items(viewModel.apiList.reversed()) {
                 ApiListItem(
@@ -223,12 +231,13 @@ private fun ApiListItem(
             horizontalArrangement = Arrangement.Center
         ) {
             AnimatedVisibility(visible = addItemsToDelete.value) {
-                Checkbox(checked = selectToDelete.value, onCheckedChange = {
-
-                    onChecked(it)
-
-                    selectToDelete.value = it
-                })
+                Checkbox(
+                    checked = selectToDelete.value,
+                    onCheckedChange = {
+                        onChecked(it)
+                        selectToDelete.value = it
+                    }
+                )
             }
             Column {
                 Row(){
@@ -237,14 +246,15 @@ private fun ApiListItem(
                         Text(lineHeight=12.sp.toEm(),
                             text = "${data.requestMethod}",
                             fontWeight = FontWeight(500),
-                            fontSize = 20.sp.toEm(),
+                            fontSize = 16.sp.toEm(),
                             fontStyle = FontStyle.Italic
                         )
                         Text(lineHeight=12.sp.toEm(),
                             text = data.statusCode.toString(),
                             fontWeight = FontWeight(700),
-                            fontSize = 18.sp.toEm(),
-                            fontStyle = FontStyle.Normal
+                            fontSize = 16.sp.toEm(),
+                            fontStyle = FontStyle.Normal,
+                            color = if(data.statusCode.matches("200".toRegex())) Green  else{ Red}
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
@@ -253,10 +263,10 @@ private fun ApiListItem(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
 
-                        Text(lineHeight=12.sp.toEm(),
+                        Text(lineHeight=18.sp.toEm(),
                             text = "${data.requestEndPoint}",
                             fontWeight = FontWeight(500),
-                            fontSize = 19.sp.toEm(),
+                            fontSize = 14.sp.toEm(),
                             fontStyle = FontStyle.Italic
                         )
 
@@ -264,10 +274,10 @@ private fun ApiListItem(
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(lineHeight=12.sp.toEm(),text = "${data.callTime}")
-                    Text(lineHeight=12.sp.toEm(),text = "${data.startTime}")
-                    Text(lineHeight=12.sp.toEm(),text = "${data.responseTime}")
-                    Text(lineHeight=12.sp.toEm(),text = "${data.memoryConsumption} B")
+                    Text(lineHeight=12.sp.toEm(),text = "${data.callTime}", fontSize = 12.sp.toEm())
+                    Text(lineHeight=12.sp.toEm(),text = "${data.startTime}",fontSize = 12.sp.toEm())
+                    Text(lineHeight=12.sp.toEm(),text = "${data.responseTime}",fontSize = 12.sp.toEm())
+                    Text(lineHeight=12.sp.toEm(),text = "${data.memoryConsumption} B",fontSize = 12.sp.toEm())
                 }
             }
 

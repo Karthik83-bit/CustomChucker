@@ -1,9 +1,7 @@
-package com.isu.apitracker
+package com.isu.apitracker.util
 
 import okhttp3.Request
 import okhttp3.Response
-import okio.ByteString
-import org.json.JSONObject
 import java.io.IOException
 
 /**

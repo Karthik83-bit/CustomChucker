@@ -1,7 +1,7 @@
 package com.isu.apitracker.domain
 
 import androidx.lifecycle.LiveData
-import com.isu.apitracker.TransactionData
+import com.isu.apitracker.data.model.TransactionData
 
 interface Repository {
     suspend fun getAllApiData(): List<TransactionData>

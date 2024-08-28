@@ -1,11 +1,10 @@
-package com.isu.apitracker.data
+package com.isu.apitracker.data.repository
 
-import androidx.lifecycle.LiveData
-import com.isu.apitracker.TransactionData
-import com.isu.apitracker.TransactionDataDao
+import com.isu.apitracker.data.model.TransactionData
+import com.isu.apitracker.data.srx.TransactionDataDao
 import com.isu.apitracker.domain.Repository
 
-class RepositoryImplementation(val dao:TransactionDataDao):Repository {
+class RepositoryImplementation(val dao: TransactionDataDao):Repository {
     override suspend fun getAllApiData(): List<TransactionData> {
         return dao.getAll()
     }

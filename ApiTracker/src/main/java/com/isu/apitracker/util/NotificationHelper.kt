@@ -1,19 +1,15 @@
-package com.isu.apitracker
+package com.isu.apitracker.util
 
-import android.app.Application.NOTIFICATION_SERVICE
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.ACTION_VIEW
 import android.os.Build
-import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat.getSystemService
+import com.isu.apitracker.R
+import com.isu.apitracker.presentation.ApiTrackingActivity
 
 class NotificationHelper(val context: Context) {
     companion object {
@@ -44,7 +40,7 @@ class NotificationHelper(val context: Context) {
         val pendingIntentToTrackingActivity= PendingIntent.getActivity(
             context,
             /* requestCode = */ 0,
-            Intent(context,ApiTrackingActivity::class.java),
+            Intent(context, ApiTrackingActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT)
 
 

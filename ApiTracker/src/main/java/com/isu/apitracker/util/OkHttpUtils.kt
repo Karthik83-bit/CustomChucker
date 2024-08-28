@@ -1,4 +1,4 @@
-package com.isu.apitracker
+package com.isu.apitracker.util
 
 import okhttp3.Headers
 import okhttp3.Response

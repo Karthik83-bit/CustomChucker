@@ -1,5 +1,7 @@
 package com.isu.apitracker.presentation.screens
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -12,6 +14,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -24,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -31,15 +37,18 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.isu.apitracker.presentation.ApiTrackerViewModel
 import com.isu.apitracker.R
 import com.isu.apitracker.presentation.screens.TabConstants.tabs
-import com.isu.apitracker.toEm
+import com.isu.apitracker.presentation.viewmodel.ApiTrackerViewModel
+import com.isu.apitracker.util.toEm
+import com.isu.apitracker.util.beautifyJson
 
 object TabConstants {
+
     private const val REQUEST_TAB = "Request"
+    private const val OVERVIEW_TAB = "Overview"
     private const val RESPONSE_TAB = "Response"
-    val tabs = listOf(REQUEST_TAB, RESPONSE_TAB)
+    val tabs = listOf(OVERVIEW_TAB,REQUEST_TAB, RESPONSE_TAB)
 }
 
 /**
@@ -48,9 +57,22 @@ object TabConstants {
  * @param navController Navigation controller to manage navigation.
  * @param viewModel ViewModel to provide data and handle logic.
  */
+fun shareText(context: Context, text: String) {
+    val intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, text)
+        type = "text/plain"
+    }
+    val shareIntent = Intent.createChooser(intent, "Sharing API Info")
+    context.startActivity(shareIntent)
+}
+
 @Composable
 fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTrackerViewModel) {
     val selectedTabIndex = remember { mutableStateOf(0) }
+    val context = LocalContext.current
+
+
 
     Scaffold(
         containerColor = Color.LightGray.copy(0.5f),
@@ -72,7 +94,10 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
                                 .fillMaxWidth()
                                 .height(50.dp)
                                 .clickable(
-                                    interactionSource = MutableInteractionSource(),
+                                    interactionSource = remember {
+                                        MutableInteractionSource ()
+                                    },
+
                                     indication = null
                                 ) {
                                     selectedTabIndex.value = index
@@ -80,7 +105,7 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(lineHeight=12.sp.toEm(),text = tab)
+                            Text(lineHeight = 12.sp.toEm(), text = tab)
                         }
                         AnimatedVisibility(
                             visible = selectedTabIndex.value == index,
@@ -92,12 +117,20 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
                                     .height(5.dp)
                                     .fillMaxWidth()
                                     .background(Color.Gray)
-                            ){
+                            ) {
 
                             }
                         }
                     }
                 }
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                val text = createText(viewModel.selectedApi.value)
+                shareText(context, text = text)
+            }) {
+                Icon(Icons.Default.Share, contentDescription = "")
             }
         }
     ) { innerPadding ->
@@ -105,7 +138,7 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
         val apiData = viewModel.selectedApi.value
 
         AnimatedVisibility(
-            visible = selectedTabIndex.value == 0,
+            visible = selectedTabIndex.value == 1,
             enter = slideInHorizontally { -it },
             exit = slideOutHorizontally { -it }
         ) {
@@ -113,13 +146,200 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
         }
 
         AnimatedVisibility(
-            visible = selectedTabIndex.value == 1,
+            visible = selectedTabIndex.value == 2,
             enter = slideInHorizontally { it },
             exit = slideOutHorizontally { it }
         ) {
             ResponseContent(innerPadding, apiData, copyManager)
         }
+        AnimatedVisibility(
+            visible = selectedTabIndex.value == 0,
+            enter = slideInHorizontally { it },
+            exit = slideOutHorizontally { it }
+        ) {
+            OverviewContent(innerPadding, apiData)
+        }
     }
+}
+
+@Composable
+fun OverviewContent(innerPadding: PaddingValues, apiData: ApiListDataClass?) {
+    Column(
+        modifier = Modifier
+            .padding(
+                start = 16.dp,
+                top = innerPadding.calculateTopPadding(),
+                end = 16.dp
+            )
+            .verticalScroll(rememberScrollState())
+    ) {
+        val url=apiData?.requestBaseURL
+        val method=apiData?.requestMethod
+        val statusCode=apiData?.statusCode
+        val callTime=apiData?.callTime
+        val responseTime=apiData?.startTime
+
+        Column(Modifier.padding(top = 16.dp)) {
+
+
+                SelectionContainer {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Text(
+                                lineHeight = 12.sp.toEm(),
+                                text = "URL" + " :",
+                                fontWeight = FontWeight.Bold, fontSize = 13.sp.toEm()
+                            )
+                        }
+                        Row(modifier = Modifier.weight(2f)) {
+                            Text(
+                                lineHeight = 22.sp.toEm(),
+                                text = apiData?.requestBaseURL?:"",
+                                fontSize = 13.sp.toEm()
+                            )
+                        }
+                    }
+
+
+            }
+            SelectionContainer {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Text(
+                                lineHeight = 12.sp.toEm(),
+                                text = "Method" + " :",
+                                fontWeight = FontWeight.Bold, fontSize = 13.sp.toEm()
+                            )
+                        }
+                        Row(modifier = Modifier.weight(2f)) {
+                            Text(
+                                lineHeight = 22.sp.toEm(),
+                                text = method?:"",
+                                fontSize = 13.sp.toEm()
+                            )
+                        }
+                    }
+
+
+            }
+            SelectionContainer {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Text(
+                                lineHeight = 12.sp.toEm(),
+                                text = "Status Code" + " :",
+                                fontWeight = FontWeight.Bold, fontSize = 13.sp.toEm()
+                            )
+                        }
+                        Row(modifier = Modifier.weight(2f)) {
+                            Text(
+                                lineHeight = 22.sp.toEm(),
+                                text = statusCode?:"",
+                                fontSize = 13.sp.toEm()
+                            )
+                        }
+                    }
+
+
+            }
+            SelectionContainer {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Text(
+                                lineHeight = 12.sp.toEm(),
+                                text = "Date" + " :",
+                                fontWeight = FontWeight.Bold, fontSize = 13.sp.toEm()
+                            )
+                        }
+                        Row(modifier = Modifier.weight(2f)) {
+                            Text(
+                                lineHeight = 22.sp.toEm(),
+                                text = responseTime?:"",
+                                fontSize = 13.sp.toEm()
+                            )
+                        }
+                    }
+
+
+            }
+            SelectionContainer {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Text(
+                                lineHeight = 12.sp.toEm(),
+                                text = "Time" + " :",
+                                fontWeight = FontWeight.Bold, fontSize = 13.sp.toEm()
+                            )
+                        }
+                        Row(modifier = Modifier.weight(2f)) {
+                            Text(
+                                lineHeight = 22.sp.toEm(),
+                                text = callTime?:"",
+                                fontSize = 13.sp.toEm()
+                            )
+                        }
+                    }
+
+
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+    }
+}
+
+fun createText(value: ApiListDataClass?): String {
+    return "API INFO:\n" +
+            "___________________________________\n" +
+            "url : ${value?.requestBaseURL}\n" +
+            "Method : ${value?.requestMethod}\n" +
+            "StatusCode : ${value?.statusCode}\n\n" +
+
+
+            "REQUEST\n" +
+
+            "___________________________\n" +
+            "Headers :-\n" +
+            "____________\n" +
+            getHeaderAsString(value?.requestHeaders ?: emptyMap()) + "\n" +
+
+            "RequestBody :\n" +
+            "____________\n" +
+            "${processedRequest(value?.request ?: "")}\n\n" +
+            if (value?.decodedRequest?.isNotEmpty() == true) {
+                "DecodedRequestBody :\n" +
+                        "____________\n" +
+                        "${value.decodedRequest.reduce { acc, s -> acc + s + "\n" }}\n\n"
+            } else {
+                ""
+            } +
+
+
+            "---------------------------------------------------------------------------\n" +
+            "RESPONSE\n" +
+            "___________________________\n" +
+            "Headers :-\n" +
+            "____________\n" +
+            getHeaderAsString(value?.responseHeaders ?: emptyMap()) + "\n" +
+            "ResponseBody :\n" +
+            "____________\n" +
+            "${processedRequest(value?.response ?: "")}\n\n" +
+            if (value?.decodedOutput?.isNotEmpty() == true) {
+                "DecodedResponseBody :\n" +
+                        "____________\n" +
+                        "${value.decodedOutput.reduce { acc, s -> acc + s + "\n" }}\n\n"
+            } else {
+                ""
+            }
+}
+
+fun getHeaderAsString(requestHeaders: Map<String, String>): String {
+    var header = ""
+    requestHeaders.forEach {
+        header += "${it.key} : ${it.value}\n"
+    }
+    return header
 }
 
 /**
@@ -130,7 +350,11 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
  * @param copyManager Clipboard manager to handle copying text.
  */
 @Composable
-fun RequestContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, copyManager: ClipboardManager) {
+fun RequestContent(
+    innerPadding: PaddingValues,
+    apiData: ApiListDataClass?,
+    copyManager: ClipboardManager,
+) {
     Column(
         modifier = Modifier
             .padding(
@@ -141,19 +365,30 @@ fun RequestContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, copy
             .verticalScroll(rememberScrollState())
     ) {
         Column(Modifier.padding(top = 16.dp)) {
-            Text(lineHeight=12.sp.toEm(),text = "Headers", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+
+            Text(
+                lineHeight = 12.sp.toEm(),
+                text = "Headers",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp.toEm(),
+                textDecoration = TextDecoration.Underline
+            )
+            Spacer(modifier = Modifier.height(10.dp))
             apiData?.requestHeaders?.forEach {
                 SelectionContainer {
-                    Row(modifier = Modifier.fillMaxWidth()){
-                        Row(modifier = Modifier.weight(1f)){
-                            Text(lineHeight=12.sp.toEm(),
-                                text = it.key+":",
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Text(
+                                lineHeight = 13.sp.toEm(),
+                                text = it.key + " :",
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Row(modifier = Modifier.weight(1f)){
-                            Text(lineHeight=12.sp.toEm(),
-                                text = processedRequest(it.value).replace("[","").replace("]","")
+                        Row(modifier = Modifier.weight(2f)) {
+                            Text(
+                                lineHeight = 22.sp.toEm(),
+                                text = it.value.replace("[", "").replace("]", ""),
+                                fontSize = 13.sp.toEm()
                             )
                         }
                     }
@@ -164,12 +399,22 @@ fun RequestContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, copy
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-        Text(lineHeight=12.sp.toEm(),text = "Request:", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+        Text(
+            lineHeight = 12.sp.toEm(),
+            text = "Request:",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp.toEm(),
+            textDecoration = TextDecoration.Underline
+        )
         RequestSection(apiData?.request, copyManager)
 
         Spacer(modifier = Modifier.height(10.dp))
         apiData?.decodedRequest?.forEachIndexed { index, decodedRequest ->
-            Text(lineHeight=12.sp.toEm(),text = "DecodedRequest:${index + 1}", fontWeight = FontWeight.Bold)
+            Text(
+                lineHeight = 22.sp.toEm(),
+                text = "DecodedRequest:${index + 1}",
+                fontWeight = FontWeight.Bold, fontSize = 13.sp
+            )
             RequestSection(decodedRequest, copyManager)
             Spacer(modifier = Modifier.height(10.dp))
         }
@@ -210,7 +455,12 @@ fun RequestSection(requestText: String?, copyManager: ClipboardManager) {
                     )
                 }
             }
-            Text(lineHeight=12.sp.toEm(),text = processedRequest(requestText) ?: "No response found", color = Color.White)
+            Text(
+                lineHeight = 22.sp.toEm(),
+                text = processedRequest(requestText),
+                color = Color.White,
+                fontSize = 13.sp.toEm()
+            )
         }
     }
 }
@@ -223,7 +473,11 @@ fun RequestSection(requestText: String?, copyManager: ClipboardManager) {
  * @param copyManager Clipboard manager to handle copying text.
  */
 @Composable
-fun ResponseContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, copyManager: ClipboardManager) {
+fun ResponseContent(
+    innerPadding: PaddingValues,
+    apiData: ApiListDataClass?,
+    copyManager: ClipboardManager,
+) {
     Column(
         modifier = Modifier
             .padding(
@@ -234,19 +488,29 @@ fun ResponseContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, cop
             .verticalScroll(rememberScrollState())
     ) {
         Column(Modifier.padding(top = 16.dp)) {
-            Text(lineHeight=12.sp.toEm(),text = "Headers", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+            Text(
+                lineHeight = 22.sp.toEm(),
+                text = "Headers",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp.toEm(),
+                textDecoration = TextDecoration.Underline
+            )
+            Spacer(modifier = Modifier.height(10.dp))
             apiData?.responseHeaders?.forEach {
                 SelectionContainer {
-                    Row(modifier = Modifier.fillMaxWidth()){
-                        Row(modifier = Modifier.weight(1f)){
-                            Text(lineHeight=12.sp.toEm(),
-                                text = it.key+":",
-                                fontWeight = FontWeight.Bold
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Text(
+                                lineHeight = 12.sp.toEm(),
+                                text = it.key + " :",
+                                fontWeight = FontWeight.Bold, fontSize = 13.sp.toEm()
                             )
                         }
-                        Row(modifier = Modifier.weight(1f)){
-                            Text(lineHeight=12.sp.toEm(),
-                                text = processedRequest(it.value).replace("[","").replace("]","")
+                        Row(modifier = Modifier.weight(2f)) {
+                            Text(
+                                lineHeight = 22.sp.toEm(),
+                                text = it.value.replace("[", "").replace("]", ""),
+                                fontSize = 13.sp.toEm()
                             )
                         }
                     }
@@ -256,12 +520,23 @@ fun ResponseContent(innerPadding: PaddingValues, apiData: ApiListDataClass?, cop
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-        Text(lineHeight=12.sp.toEm(),text = "Response:", fontWeight = FontWeight.Bold, fontSize = 34.sp.toEm(), textDecoration = TextDecoration.Underline)
+        Text(
+            lineHeight = 22.sp.toEm(),
+            text = "Response:",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp.toEm(),
+            textDecoration = TextDecoration.Underline
+        )
         ResponseSection(apiData?.response, copyManager)
 
         Spacer(modifier = Modifier.height(10.dp))
         apiData?.decodedOutput?.forEachIndexed { index, decodedOutput ->
-            Text(lineHeight=12.sp.toEm(),text = "DecodedResponse: ${index + 1}", fontWeight = FontWeight.Bold)
+            Text(
+                lineHeight = 12.sp.toEm(),
+                text = "DecodedResponse: ${index + 1}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp.toEm()
+            )
             ResponseSection(decodedOutput, copyManager)
             Spacer(modifier = Modifier.height(10.dp))
         }
@@ -302,7 +577,12 @@ fun ResponseSection(responseText: String?, copyManager: ClipboardManager) {
                     )
                 }
             }
-            Text(lineHeight=12.sp.toEm(),text = processedRequest(responseText) ?: "No response found", color = Color.White)
+            Text(
+                lineHeight = 22.sp.toEm(),
+                text = processedRequest(responseText),
+                color = Color.White,
+                fontSize = 13.sp.toEm()
+            )
         }
     }
 }
@@ -313,6 +593,8 @@ fun ResponseSection(responseText: String?, copyManager: ClipboardManager) {
  * @param request The request string to process.
  * @return The processed request string.
  */
-fun processedRequest(request: String): String{
-    return request.replaceFirst("\"", "").reversed().replaceFirst("\"", "").reversed()
+fun processedRequest(request: String): String {
+
+    return beautifyJson(request) ?: ""
+//    return request.replaceFirst("\"", "").reversed().replaceFirst("\"", "").reversed()
 }

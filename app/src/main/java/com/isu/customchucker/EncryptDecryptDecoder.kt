@@ -1,13 +1,13 @@
 package com.isu.customchucker
 
 import android.util.Log
-import com.isu.apitracker.BodyDecoder
+import com.isu.apitracker.util.BodyDecoder
 import okhttp3.Request
 import okhttp3.Response
 import okio.Buffer
 import org.json.JSONObject
 
-class EncryptDecryptDecoder:BodyDecoder {
+class EncryptDecryptDecoder: BodyDecoder {
     override fun decodeRequest(request: Request): String? {
         val bodyJsonStr=request.body?.toStringRepresentation()
         val bodyJsonObj=JSONObject(bodyJsonStr)

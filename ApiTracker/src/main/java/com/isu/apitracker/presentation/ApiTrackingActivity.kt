@@ -1,4 +1,4 @@
-package com.isu.apitracker
+package com.isu.apitracker.presentation
 
 import android.os.Build
 import android.os.Bundle
@@ -15,13 +15,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
-import com.isu.apitracker.data.RepositoryImplementation
+import com.isu.apitracker.data.repository.RepositoryImplementation
+import com.isu.apitracker.data.srx.AppDatabase
 import com.isu.apitracker.domain.Repository
-import com.isu.apitracker.presentation.ApiTrackerViewModel
+import com.isu.apitracker.presentation.viewmodel.ApiTrackerViewModel
+import com.isu.apitracker.presentation.viewmodel.ViewModelFactory
 import com.isu.apitracker.presentation.screens.ApiListScreen
 import com.isu.apitracker.presentation.screens.RequestResponseScreen
 import com.isu.apitracker.presentation.ui.theme.CustomChuckerTheme
-
+import com.isu.apitracker.util.toEm
 
 
 class ApiTrackingActivity : ComponentActivity() {

@@ -113,6 +113,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     annotationProcessor(libs.androidx.room.compiler)
 
+
     // To use Kotlin annotation processing tool (kapt)
 
     // To use Kotlin Symbol Processing (KSP)

@@ -7,7 +7,7 @@
     <application android:name=".ApiTrackerApplication"
         >
         <activity
-            android:name=".ApiTrackingActivity"
+            android:name=".presentation.ApiTrackingActivity"
             android:exported="false"
 
 
