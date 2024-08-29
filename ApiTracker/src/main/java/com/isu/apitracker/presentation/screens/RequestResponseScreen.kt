@@ -439,6 +439,7 @@ fun RequestSection(requestText: String?, copyManager: ClipboardManager) {
                 .background(Color(0xF0141414))
                 .padding(16.dp)
         ) {
+
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
