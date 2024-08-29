@@ -53,6 +53,8 @@ class ApiInterceptor(
         val responseBodyString = response.body.string()
         showNotification(response, request)
         val newResponse = response.newBuilder()
+            .headers(response.headers)
+            .code(response.code)
             .body(responseBodyString.toResponseBody(response.body.contentType()))
             .build()
         val duration = (endTime - startTime) / 1_000_000.0
