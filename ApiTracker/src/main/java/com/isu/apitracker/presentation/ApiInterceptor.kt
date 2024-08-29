@@ -3,8 +3,6 @@ package com.isu.apitracker.presentation
 import android.content.Context
 import android.util.Log
 import androidx.room.Room
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.isu.apitracker.util.BodyDecoder
 import com.isu.apitracker.util.NotificationHelper
 import com.isu.apitracker.data.model.TransactionData
@@ -28,6 +26,7 @@ import java.util.TimeZone
 class ApiInterceptor(
     private val context: Context,
     private val listOfDecoder: List<BodyDecoder>? = null,
+    private val listOfEcludedUrlForDEcoding:List<String>?=null
 ) : Interceptor {
 
     // Database initialization
@@ -67,6 +66,7 @@ class ApiInterceptor(
             requestHeaders = requestHeaders,
             responseBody = responseBodyString,
             responseHeaders = responseHeaders,
+            listOfEcludedUrlForDEcoding
         )
 
         return newResponse
@@ -112,22 +112,26 @@ class ApiInterceptor(
         response: Response,
         duration: Double,
         startTimeString: String,
-        requestBody:String,
-        requestHeaders:Map<String,List<String>>,
+        requestBody: String,
+        requestHeaders: Map<String, List<String>>,
         responseBody: String,
-        responseHeaders:Map<String,List<String>>
+        responseHeaders: Map<String, List<String>>,
+        listOfEcludedUrlForDEcoding: List<String>?
 
 
     ) {
         try {
             val decodedRequest: MutableList<String?> = mutableListOf()
             val decodedResponse: MutableList<String?> = mutableListOf()
-            try {
-                decodedRequest.addAll(listOfDecoder?.map { it.decodeRequest(request) } ?: emptyList())
-                decodedResponse.addAll(listOfDecoder?.map { it.decodeResponse(response) } ?: emptyList())
-            } catch (e: Exception) {
-                e.printStackTrace()
+            if(listOfEcludedUrlForDEcoding?.contains(request.url.toString())==true){
+                try {
+                    decodedRequest.addAll(listOfDecoder?.map { it.decodeRequest(request) } ?: emptyList())
+                    decodedResponse.addAll(listOfDecoder?.map { it.decodeResponse(response) } ?: emptyList())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
+
 
             val transactionData = TransactionData(
                 url = request.url.toString(),

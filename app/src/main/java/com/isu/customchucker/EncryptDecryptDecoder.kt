@@ -35,7 +35,7 @@ class EncryptDecryptDecoder: BodyDecoder {
             println("IV: $iv")
             println("Encrypted Message: $encryptedMessage")
             println("Auth Tag: $authTag")
-            EncryptDecrypt.aesGcmDecryptFromBase64FromJsonObject("XHgxl8qs5D6sejZncSsYg7OqPIeV0uQe5I9Zh+uHLcc=",dataObject ).toString()
+            EncryptDecrypt.aesGcmDecryptFromBase64FromJsonObject("XHgxl8qs5D6sejZncSsYg7OqPIeV0uQe5I9Zh+uHLcc",dataObject ).toString()
         }catch (e:Exception){
            Log.d("DEC", "decodeResponse: ${e.message}")
             e.printStackTrace()
