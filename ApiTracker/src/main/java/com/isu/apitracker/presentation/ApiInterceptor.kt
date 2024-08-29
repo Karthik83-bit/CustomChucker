@@ -123,14 +123,17 @@ class ApiInterceptor(
         try {
             val decodedRequest: MutableList<String?> = mutableListOf()
             val decodedResponse: MutableList<String?> = mutableListOf()
-            if(listOfEcludedUrlForDEcoding?.contains(request.url.toString())==true){
-                try {
-                    decodedRequest.addAll(listOfDecoder?.map { it.decodeRequest(request) } ?: emptyList())
-                    decodedResponse.addAll(listOfDecoder?.map { it.decodeResponse(response) } ?: emptyList())
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            if(listOfEcludedUrlForDEcoding!=null){
+                if(!listOfEcludedUrlForDEcoding.contains(request.url.toString())){
+                    try {
+                        decodedRequest.addAll(listOfDecoder?.map { it.decodeRequest(request) } ?: emptyList())
+                        decodedResponse.addAll(listOfDecoder?.map { it.decodeResponse(response) } ?: emptyList())
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
+
 
 
             val transactionData = TransactionData(
