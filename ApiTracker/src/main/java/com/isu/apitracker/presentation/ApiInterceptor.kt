@@ -53,6 +53,7 @@ class ApiInterceptor(
         val responseBodyString = response.body.string()
         showNotification(response, request)
         //to avoid consumption of interceptor
+
         val newResponseToReturn = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
