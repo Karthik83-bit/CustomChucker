@@ -52,6 +52,11 @@ class ApiInterceptor(
         val responseHeaders=response.headers.toMultimap()
         val responseBodyString = response.body.string()
         showNotification(response, request)
+        val newResponseToReturn = response.newBuilder()
+            .headers(response.headers)
+            .code(response.code)
+            .body(responseBodyString.toResponseBody(response.body.contentType()))
+            .build()
         val newResponse = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
@@ -71,7 +76,7 @@ class ApiInterceptor(
             listOfEcludedUrlForDEcoding
         )
 
-        return newResponse
+        return newResponseToReturn
     }
 
     /**
