@@ -4,16 +4,21 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <application android:name=".ApiTrackerApplication"
-        >
+    <application>
         <activity
             android:name=".presentation.ApiTrackingActivity"
             android:exported="false"
-
-
             android:label="@string/title_activity_api_tracking"
             android:theme="@style/Theme.CustomChucker" />
-
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

@@ -30,7 +30,7 @@ interface ApiService {
         private fun getClient(context: Context): OkHttpClient {
             val client=OkHttpClient
                 .Builder()
-                .addInterceptor(ApiInterceptor(context=context))
+                .addInterceptor(ApiInterceptor(context=context, listOfDecoder = listOf(EncryptDecryptDecoder())))
                 .build()
             return client
         }

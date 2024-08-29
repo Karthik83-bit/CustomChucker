@@ -8,6 +8,7 @@ import okio.Buffer
 import org.json.JSONObject
 
 class EncryptDecryptDecoder: BodyDecoder {
+
     override fun decodeRequest(request: Request): String? {
         val bodyJsonStr=request.body?.toStringRepresentation()
         val bodyJsonObj=JSONObject(bodyJsonStr)
@@ -21,11 +22,13 @@ class EncryptDecryptDecoder: BodyDecoder {
         val jsonObject=JSONObject(responseBodyStr)
         Log.d("DEC", "decodeRequest: $jsonObject")
        return   try {
-            val statusCode = jsonObject.getInt("statusCode")
-            val status = jsonObject.getString("status")
-            val statusDesc = jsonObject.getString("statusDesc")
 
-            val dataObject = jsonObject.getJSONObject("data")
+
+            val dataObject = if(jsonObject.has("data")){
+                jsonObject.getJSONObject("data")
+            }else{
+               return "No data found"
+            }
             val iv = dataObject.getString("iv")
             val encryptedMessage = dataObject.getString("encryptedMessage")
             val authTag = dataObject.getString("authTag")

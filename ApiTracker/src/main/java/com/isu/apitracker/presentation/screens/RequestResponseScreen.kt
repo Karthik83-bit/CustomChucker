@@ -40,6 +40,7 @@ import androidx.navigation.NavHostController
 import com.isu.apitracker.R
 import com.isu.apitracker.presentation.screens.TabConstants.tabs
 import com.isu.apitracker.presentation.viewmodel.ApiTrackerViewModel
+import com.isu.apitracker.util.FileMaker
 import com.isu.apitracker.util.toEm
 import com.isu.apitracker.util.beautifyJson
 
@@ -129,6 +130,7 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
             FloatingActionButton(onClick = {
                 val text = createText(viewModel.selectedApi.value)
                 shareText(context, text = text)
+//                FileMaker.createTxtFile(context, fileName = viewModel.selectedApi.value?.requestBaseURL?:"MyFile",text)
             }) {
                 Icon(Icons.Default.Share, contentDescription = "")
             }
@@ -595,6 +597,6 @@ fun ResponseSection(responseText: String?, copyManager: ClipboardManager) {
  */
 fun processedRequest(request: String): String {
 
-    return beautifyJson(request) ?: ""
+    return beautifyJson(request) ?: request
 //    return request.replaceFirst("\"", "").reversed().replaceFirst("\"", "").reversed()
 }
