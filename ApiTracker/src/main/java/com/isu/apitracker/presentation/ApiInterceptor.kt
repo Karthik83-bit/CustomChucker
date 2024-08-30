@@ -141,6 +141,13 @@ class ApiInterceptor(
                         e.printStackTrace()
                     }
                 }
+            }else{
+                try {
+                    decodedRequest.addAll(listOfDecoder?.map { it.decodeRequest(request) } ?: emptyList())
+                    decodedResponse.addAll(listOfDecoder?.map { it.decodeResponse(response) } ?: emptyList())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
 
