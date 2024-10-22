@@ -25,13 +25,13 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
     var selectedApi: MutableState<ApiListDataClass?> = mutableStateOf(null)
     val apiList = mutableStateListOf<ApiListDataClass>()
     val selectedApiToDelete = mutableStateListOf<Int>()
-    private val requestHeaders = mutableMapOf<String, String>()
-    private val responseHeaders = mutableMapOf<String, String>()
+
 
     /**
      * Fetches all API data and updates the UI list.
      */
     fun getAllApi() {
+
         viewModelScope.launch {
             val list = repository.getAllApiData()
             Log.d("apiData", "getAllApi: $list")
@@ -41,6 +41,8 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
             var respBody = ""
             var date = ""
             val uiList = list.map {
+                val requestHeaders = mutableMapOf<String, String>()
+                val responseHeaders = mutableMapOf<String, String>()
                 try {
                     reqBody = it.request
                      respBody = it.response

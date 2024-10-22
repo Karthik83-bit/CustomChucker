@@ -58,6 +58,7 @@ class ApiInterceptor(
             .headers(response.headers)
             .code(response.code)
             .body(responseBodyString.toResponseBody(response.body.contentType()))
+
             .build()
         val newResponse = response.newBuilder()
             .headers(response.headers)
