@@ -69,6 +69,8 @@ data class ApiListDataClass(
     val decodedRequest: List<String?> = emptyList(),
     val decodedOutput: List<String?> = emptyList(),
     val startTime: String,
+    val requestFilePath: String? = null,
+    val responseFilePath: String? = null,
 )
 
 

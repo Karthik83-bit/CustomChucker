@@ -9,6 +9,9 @@ import com.isu.apitracker.data.model.TransactionData
 // Define the DAO
 @Dao
 interface TransactionDataDao {
+    @Query("SELECT * FROM transaction_data ORDER BY id DESC LIMIT :limit OFFSET :offset")
+    suspend fun getAllPaged(limit: Int, offset: Int):List<TransactionData>
+
     @Query("SELECT * FROM transaction_data")
     suspend fun getAll():List<TransactionData>
 

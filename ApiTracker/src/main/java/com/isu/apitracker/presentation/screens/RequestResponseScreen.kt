@@ -16,9 +16,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -166,6 +163,8 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
 
 @Composable
 fun OverviewContent(innerPadding: PaddingValues, apiData: ApiListDataClass?) {
+    val copyManager = LocalClipboardManager.current
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .padding(
@@ -288,6 +287,23 @@ fun OverviewContent(innerPadding: PaddingValues, apiData: ApiListDataClass?) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Add curl copy button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = {
+                    val curl = createCurlCommand(apiData)
+                    copyManager.setText(AnnotatedString(curl))
+                    // Show toast or snackbar
+                    Toast.makeText(context, "Curl command copied to clipboard", Toast.LENGTH_SHORT).show()
+                }
+            ) {
+                Text("Copy as cURL")
+            }
+        }
+
     }
 }
 
@@ -336,6 +352,25 @@ fun createText(value: ApiListDataClass?): String {
             }
 }
 
+fun createCurlCommand(value: ApiListDataClass?): String {
+    val method = value?.requestMethod ?: "GET"
+    val url = value?.requestBaseURL ?: ""
+    val headers = value?.requestHeaders ?: emptyMap()
+    val requestBody = value?.request ?: ""
+
+    var curl = "curl -X $method \"$url\""
+
+    headers.forEach { (key, value) ->
+        curl += " \\\n  -H \"$key: $value\""
+    }
+
+    if (requestBody.isNotEmpty() && method in listOf("POST", "PUT", "PATCH")) {
+        curl += " \\\n  -d '$requestBody'"
+    }
+
+    return curl
+}
+
 fun getHeaderAsString(requestHeaders: Map<String, String>): String {
     var header = ""
     requestHeaders.forEach {
@@ -357,6 +392,7 @@ fun RequestContent(
     apiData: ApiListDataClass?,
     copyManager: ClipboardManager,
 ) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .padding(
@@ -409,7 +445,7 @@ fun RequestContent(
             fontSize = 20.sp.toEm(),
             textDecoration = TextDecoration.Underline
         )
-        RequestSection(apiData?.request, copyManager)
+        RequestSection(apiData?.request, copyManager, apiData?.requestFilePath, context)
 
         Spacer(modifier = Modifier.height(10.dp))
         apiData?.decodedRequest?.forEachIndexed { index, decodedRequest ->
@@ -418,7 +454,7 @@ fun RequestContent(
                 text = "DecodedRequest:${index + 1}",
                 fontWeight = FontWeight.Bold, fontSize = 13.sp
             )
-            RequestSection(decodedRequest, copyManager)
+            RequestSection(decodedRequest, copyManager, null, context)
             Spacer(modifier = Modifier.height(10.dp))
         }
     }
@@ -431,8 +467,8 @@ fun RequestContent(
  * @param copyManager Clipboard manager to handle copying text.
  */
 @Composable
-fun RequestSection(requestText: String?, copyManager: ClipboardManager) {
-    if (!requestText.isNullOrEmpty()) {
+fun RequestSection(requestText: String?, copyManager: ClipboardManager, filePath: String? = null, context: android.content.Context) {
+    if (!requestText.isNullOrEmpty() || filePath != null) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -445,10 +481,34 @@ fun RequestSection(requestText: String?, copyManager: ClipboardManager) {
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
+                if (filePath != null) {
+                    IconButton(
+                        onClick = {
+                            // Export file
+                            val file = java.io.File(filePath)
+                            if (file.exists()) {
+                                FileMaker.createTxtFile(context, "request_${System.currentTimeMillis()}", file.readText())
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_circle_notifications_24), // Use a different icon for export
+                            contentDescription = "Export file",
+                            tint = Color.LightGray
+                        )
+                    }
+                }
                 IconButton(
                     onClick = {
-                        if (requestText.isNotEmpty()) {
-                            copyManager.setText(AnnotatedString(requestText))
+                        val textToCopy = if (filePath != null && requestText?.startsWith("[Content saved to file:") == true) {
+                            // Load from file
+                            val file = java.io.File(filePath)
+                            if (file.exists()) file.readText() else requestText ?: ""
+                        } else {
+                            requestText ?: ""
+                        }
+                        if (textToCopy.isNotEmpty()) {
+                            copyManager.setText(AnnotatedString(textToCopy))
                         }
                     }
                 ) {
@@ -459,9 +519,14 @@ fun RequestSection(requestText: String?, copyManager: ClipboardManager) {
                     )
                 }
             }
+            val displayText = if (filePath != null && requestText?.startsWith("[Content saved to file:") == true) {
+                requestText
+            } else {
+                processedRequest(requestText ?: "")
+            }
             Text(
                 lineHeight = 22.sp.toEm(),
-                text = processedRequest(requestText),
+                text = displayText,
                 color = Color.White,
                 fontSize = 13.sp.toEm()
             )
@@ -482,6 +547,7 @@ fun ResponseContent(
     apiData: ApiListDataClass?,
     copyManager: ClipboardManager,
 ) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .padding(
@@ -531,7 +597,7 @@ fun ResponseContent(
             fontSize = 20.sp.toEm(),
             textDecoration = TextDecoration.Underline
         )
-        ResponseSection(apiData?.response, copyManager)
+        ResponseSection(apiData?.response, copyManager, apiData?.responseFilePath, context)
 
         Spacer(modifier = Modifier.height(10.dp))
         apiData?.decodedOutput?.forEachIndexed { index, decodedOutput ->
@@ -541,7 +607,7 @@ fun ResponseContent(
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp.toEm()
             )
-            ResponseSection(decodedOutput, copyManager)
+            ResponseSection(decodedOutput, copyManager, null, context)
             Spacer(modifier = Modifier.height(10.dp))
         }
     }
@@ -554,8 +620,8 @@ fun ResponseContent(
  * @param copyManager Clipboard manager to handle copying text.
  */
 @Composable
-fun ResponseSection(responseText: String?, copyManager: ClipboardManager) {
-    if (!responseText.isNullOrEmpty()) {
+fun ResponseSection(responseText: String?, copyManager: ClipboardManager, filePath: String? = null, context: android.content.Context) {
+    if (!responseText.isNullOrEmpty() || filePath != null) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -567,10 +633,34 @@ fun ResponseSection(responseText: String?, copyManager: ClipboardManager) {
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
+                if (filePath != null) {
+                    IconButton(
+                        onClick = {
+                            // Export file
+                            val file = java.io.File(filePath)
+                            if (file.exists()) {
+                                FileMaker.createTxtFile(context, "response_${System.currentTimeMillis()}", file.readText())
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_circle_notifications_24), // Use a different icon for export
+                            contentDescription = "Export file",
+                            tint = Color.LightGray
+                        )
+                    }
+                }
                 IconButton(
                     onClick = {
-                        if (responseText.isNotEmpty()) {
-                            copyManager.setText(AnnotatedString(responseText))
+                        val textToCopy = if (filePath != null && responseText?.startsWith("[Content saved to file:") == true) {
+                            // Load from file
+                            val file = java.io.File(filePath)
+                            if (file.exists()) file.readText() else responseText ?: ""
+                        } else {
+                            responseText ?: ""
+                        }
+                        if (textToCopy.isNotEmpty()) {
+                            copyManager.setText(AnnotatedString(textToCopy))
                         }
                     }
                 ) {
@@ -581,9 +671,14 @@ fun ResponseSection(responseText: String?, copyManager: ClipboardManager) {
                     )
                 }
             }
+            val displayText = if (filePath != null && responseText?.startsWith("[Content saved to file:") == true) {
+                responseText
+            } else {
+                processedRequest(responseText ?: "")
+            }
             Text(
                 lineHeight = 22.sp.toEm(),
-                text = processedRequest(responseText),
+                text = displayText,
                 color = Color.White,
                 fontSize = 13.sp.toEm()
             )
