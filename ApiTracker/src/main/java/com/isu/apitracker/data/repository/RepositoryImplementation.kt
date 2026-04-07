@@ -9,6 +9,10 @@ class RepositoryImplementation(val dao: TransactionDataDao):Repository {
         return dao.getAll()
     }
 
+    override suspend fun getAllApiDataPaged(limit: Int, offset: Int): List<TransactionData> {
+        return dao.getAllPaged(limit, offset)
+    }
+
     override suspend fun deleteAllApiData() {
         return dao.delete()
     }

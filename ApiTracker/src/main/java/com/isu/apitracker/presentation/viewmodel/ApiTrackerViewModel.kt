@@ -78,7 +78,9 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
                     responseHeaders = responseHeaders,
                     requestHeaders = requestHeaders,
                     decodedRequest = it.decoderRequest,
-                    decodedOutput = it.decoderResponse
+                    decodedOutput = it.decoderResponse,
+                    requestFilePath = it.requestFilePath,
+                    responseFilePath = it.responseFilePath
                 )
             }
             if (apiList.isEmpty()) {
