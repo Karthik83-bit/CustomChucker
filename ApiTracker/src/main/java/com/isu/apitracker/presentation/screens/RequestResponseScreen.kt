@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -149,6 +150,14 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
                             showMenu.value = false
                             val text = createText(viewModel.selectedApi.value)
                             shareText(context, text)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Share as cURL") },
+                        onClick = {
+                            showMenu.value = false
+                            val curl = createCurlCommand(viewModel.selectedApi.value)
+                            shareText(context, curl)
                         }
                     )
                     DropdownMenuItem(
@@ -316,23 +325,6 @@ fun OverviewContent(innerPadding: PaddingValues, apiData: ApiListDataClass?) {
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-
-        // Add curl copy button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(
-                onClick = {
-                    val curl = createCurlCommand(apiData)
-                    copyManager.setText(AnnotatedString(curl))
-                    // Show toast or snackbar
-                    Toast.makeText(context, "Curl command copied to clipboard", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Text("Copy as cURL")
-            }
-        }
 
     }
 }
