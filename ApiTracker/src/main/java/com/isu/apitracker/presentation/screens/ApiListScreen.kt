@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -26,8 +27,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -155,10 +158,16 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
             }
         }
     }) { padding ->
-        LazyColumn(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = padding.calculateTopPadding())
+        ) {
+            item {
+                FilterSection(viewModel)
+            }
 
-
-            items(viewModel.apiList.reversed()) {
+            items(viewModel.visibleApiList.reversed()) {
                 ApiListItem(
                     data = it,
                     selectedItemsToDelete = viewModel.selectedApiToDelete,
@@ -179,6 +188,82 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                 )
             }
 
+        }
+    }
+}
+
+@Composable
+private fun FilterSection(viewModel: ApiTrackerViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        OutlinedTextField(
+            value = viewModel.searchQuery.value,
+            onValueChange = viewModel::updateSearchQuery,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = {
+                Text(lineHeight = 12.sp.toEm(), text = "Search API / Method / Status")
+            },
+            placeholder = {
+                Text(lineHeight = 12.sp.toEm(), text = "ex: users, GET, 404")
+            }
+        )
+
+        OutlinedTextField(
+            value = viewModel.statusCodeFilter.value,
+            onValueChange = viewModel::updateStatusCodeFilter,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = {
+                Text(lineHeight = 12.sp.toEm(), text = "Filter By Status Code")
+            },
+            placeholder = {
+                Text(lineHeight = 12.sp.toEm(), text = "ex: 200, 404, 500")
+            }
+        )
+
+        OutlinedTextField(
+            value = viewModel.fromDateTime.value,
+            onValueChange = viewModel::updateFromDateTime,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = {
+                Text(lineHeight = 12.sp.toEm(), text = "From Date Time")
+            },
+            placeholder = {
+                Text(lineHeight = 12.sp.toEm(), text = "08 Apr 2026 14:30:00")
+            }
+        )
+
+        OutlinedTextField(
+            value = viewModel.toDateTime.value,
+            onValueChange = viewModel::updateToDateTime,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = {
+                Text(lineHeight = 12.sp.toEm(), text = "To Date Time")
+            },
+            placeholder = {
+                Text(lineHeight = 12.sp.toEm(), text = "08 Apr 2026 18:00:00")
+            }
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                lineHeight = 12.sp.toEm(),
+                text = "Showing ${viewModel.visibleApiList.size} of ${viewModel.apiList.size}"
+            )
+            TextButton(onClick = viewModel::clearFilters) {
+                Text(lineHeight = 12.sp.toEm(), text = "Clear")
+            }
         }
     }
 }
