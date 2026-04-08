@@ -9,8 +9,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -20,15 +24,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.gson.Gson
 import com.isu.apitracker.util.toEm
 import com.isu.customchucker.ui.theme.CustomChuckerTheme
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -44,26 +51,71 @@ class MainActivity : ComponentActivity() {
                     requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    val text:MutableState<String> = remember {
+                        mutableStateOf("")
+                    }
+                    val scope = rememberCoroutineScope()
                   Column(
                       Modifier
                           .fillMaxSize()
-                          .padding(innerPadding), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                      val text:MutableState<String> = remember {
-                          mutableStateOf("")
-                      }
+                          .padding(innerPadding)
+                          .padding(16.dp)
+                          .verticalScroll(rememberScrollState()),
+                      horizontalAlignment = Alignment.CenterHorizontally,
+                      verticalArrangement = Arrangement.Center) {
+                      Text(lineHeight=16.sp.toEm(), text = "API Tracker Test Cases")
+                      Spacer(modifier = Modifier.height(16.dp))
                       if(text.value.isEmpty()){
                           CircularProgressIndicator()
                       }else{
                           Text(lineHeight=16.sp.toEm(),text=text.value)
                       }
-                              Button(onClick = {
+                      Spacer(modifier = Modifier.height(16.dp))
+                      Button(onClick = {
                           callApi(onLoading = {},onSucess = {
                               text.value=it.toString()
                           }, onError = {
                               text.value=it
                           })
                       }) {
-                          Text(lineHeight=14.sp.toEm(), text = "Test")
+                          Text(lineHeight=14.sp.toEm(), text = "OTP Test")
+                      }
+                      Spacer(modifier = Modifier.height(12.dp))
+                      Button(onClick = {
+                          scope.launch {
+                              text.value = "Calling normal success API..."
+                              text.value = callRawApi("https://dummyjson.com/quotes/1")
+                          }
+                      }) {
+                          Text(lineHeight=14.sp.toEm(), text = "Small Success")
+                      }
+                      Spacer(modifier = Modifier.height(12.dp))
+                      Button(onClick = {
+                          scope.launch {
+                              text.value = "Calling small 404 API..."
+                              text.value = callRawApi("https://dummyjson.com/quotes/999999")
+                          }
+                      }) {
+                          Text(lineHeight=14.sp.toEm(), text = "Small 404")
+                      }
+                      Spacer(modifier = Modifier.height(12.dp))
+                      Button(onClick = {
+                          scope.launch {
+                              text.value = "Calling large payload API..."
+                              text.value = callRawApi("https://httpbin.org/bytes/180000")
+                          }
+                      }) {
+                          Text(lineHeight=14.sp.toEm(), text = "Large Blob 200")
+                      }
+                      Spacer(modifier = Modifier.height(12.dp))
+                      Button(onClick = {
+                          scope.launch {
+                              text.value = "Calling delayed 404 flow..."
+                              delay(500)
+                              text.value = callRawApi("https://httpstat.us/404")
+                          }
+                      }) {
+                          Text(lineHeight=14.sp.toEm(), text = "404 Notification Test")
                       }
                   }
                 }
@@ -104,6 +156,21 @@ class MainActivity : ComponentActivity() {
         onLoading(response.isActive)
 
 
+    }
+
+    private suspend fun callRawApi(url: String): String {
+        return try {
+            val service = ApiService.getService(applicationContext)
+            val response = service.getRawResponse(url)
+            val bodyPreview = response.errorBody()?.string()
+                ?: response.body()?.string()
+                ?: "No body"
+            val compactPreview = bodyPreview.take(200)
+            "Code: ${response.code()}\nUrl: $url\nBody preview: $compactPreview"
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "Error: ${e.message}"
+        }
     }
 }
 

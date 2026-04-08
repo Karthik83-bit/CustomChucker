@@ -3,6 +3,7 @@ package com.isu.customchucker
 import android.content.Context
 import com.isu.apitracker.presentation.ApiInterceptor
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -39,6 +40,9 @@ interface ApiService {
     }
     @GET()
     suspend fun getApiResponse(@Url url:String="https://dummyjson.com/quotes/${Random.nextInt(1,200)}"):Response<NewQuoteResponse>
+
+    @GET
+    suspend fun getRawResponse(@Url url: String): Response<ResponseBody>
 
     @POST("/card/generate_otp")
     suspend fun generateOTP(@Body request: EncryptedData,
