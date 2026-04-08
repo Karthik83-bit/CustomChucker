@@ -53,20 +53,20 @@ class ApiInterceptor(
         val response = chain.proceed(request)
         val endTime = System.nanoTime()
         val responseHeaders=response.headers.toMultimap()
-        val responseBodyString = response.body.string()
+        val responseBodyString = response.body?.string()
         showNotification(response, request)
         //to avoid consumption of interceptor
 
         val newResponseToReturn = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
-            .body(responseBodyString.toResponseBody(response.body.contentType()))
+            .body(responseBodyString?.toResponseBody(response.body?.contentType()))
 
             .build()
         val newResponse = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
-            .body(responseBodyString.toResponseBody(response.body.contentType()))
+            .body(responseBodyString?.toResponseBody(response.body?.contentType()))
             .build()
         val duration = (endTime - startTime) / 1_000_000.0
         val startTimeString = getCurrentTime()
@@ -77,7 +77,7 @@ class ApiInterceptor(
             startTimeString = startTimeString,
             requestBody = requestString ?: "",
             requestHeaders = requestHeaders,
-            responseBody = responseBodyString,
+            responseBody = responseBodyString?:"",
             responseHeaders = responseHeaders,
             listOfEcludedUrlForDEcoding
         )

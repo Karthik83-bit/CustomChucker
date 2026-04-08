@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -105,7 +105,7 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                         selectAll.value=false
                         viewModel.selectedApiToDelete.clear()
                     }) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "")
                     }
                 }
                 Row(
@@ -140,7 +140,7 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                     IconButton(onClick = {
                         activity.finish()
                     }) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "")
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "")
                     }
                 }
                 Row {

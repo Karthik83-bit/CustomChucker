@@ -33,12 +33,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon.Companion.Text
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.SemanticsProperties.Text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType.Companion.Text
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +52,7 @@ import com.isu.apitracker.presentation.viewmodel.ApiTrackerViewModel
 import com.isu.apitracker.util.FileMaker
 import com.isu.apitracker.util.toEm
 import com.isu.apitracker.util.beautifyJson
+import org.w3c.dom.Text
 
 object TabConstants {
 
@@ -153,10 +157,12 @@ fun RequestResponseScreen(navController: NavHostController, viewModel: ApiTracke
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Share as cURL") },
+                        text = { Text("Share as cUrl") },
                         onClick = {
-                            showMenu.value = false
                             val curl = createCurlCommand(viewModel.selectedApi.value)
+//                            copyManager.setText(AnnotatedString(curl))
+                            showMenu.value = false
+//                            val text = createText(viewModel.selectedApi.value)
                             shareText(context, curl)
                         }
                     )
@@ -325,6 +331,23 @@ fun OverviewContent(innerPadding: PaddingValues, apiData: ApiListDataClass?) {
         }
 
         Spacer(modifier = Modifier.height(20.dp))
+
+        // Add curl copy button
+    /*    Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = {
+                    val curl = createCurlCommand(apiData)
+                    copyManager.setText(AnnotatedString(curl))
+                    // Show toast or snackbar
+                    Toast.makeText(context, "Curl command copied to clipboard", Toast.LENGTH_SHORT).show()
+                }
+            ) {
+                Text("Copy as cURL")
+            }
+        }*/
 
     }
 }
