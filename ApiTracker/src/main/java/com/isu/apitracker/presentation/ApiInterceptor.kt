@@ -31,6 +31,8 @@ class ApiInterceptor(
     private val listOfEcludedUrlForDEcoding:List<String>?=null,
     private val maxContentLength: Long = 1024 * 1024 // 1MB default limit
 ) : Interceptor {
+    // Keep SQLite rows small; larger payloads are stored as files and referenced by path.
+    private val maxInlineStorageLength: Long = 100 * 1024
 
     // Database initialization
     private val db = Room.databaseBuilder(
@@ -50,8 +52,6 @@ class ApiInterceptor(
 
         val requestHeaders=request.headers.toMultimap()
         val requestString=request.body?.toStringRepresentation()
-        Log.d("gsonreq", "intercept: ${request.body?.toStringRepresentation()}")
-        Log.d("gsonreq", "intercept: ${request.body?.toStringRepresentation()}")
         val response = chain.proceed(request)
         val endTime = System.nanoTime()
         val responseHeaders=response.headers.toMultimap()
@@ -195,7 +195,8 @@ class ApiInterceptor(
     }
 
     private fun handleLargeContent(content: String, fileName: String, maxLength: Long): Pair<String, String?> {
-        return if (content.length > maxLength) {
+        val inlineLimit = minOf(maxLength, maxInlineStorageLength)
+        return if (content.length > inlineLimit) {
             // Save to file
             val filePath = saveContentToFile(content, fileName)
             Pair("[Content saved to file: $filePath]", filePath)
