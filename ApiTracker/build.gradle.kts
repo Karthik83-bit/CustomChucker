@@ -97,21 +97,18 @@ publishing {
 
 
 dependencies {
-    compileOnly(platform(libs.androidx.compose.bom))
-    compileOnly(libs.androidx.ui)
-    compileOnly(libs.androidx.material3)
-    compileOnly(libs.androidx.ui.tooling.preview)
+    // Publish Compose dependencies transitively because the SDK's UI layer uses them at runtime.
+    api(platform(libs.androidx.compose.bom))
     // ===== CORE ANDROID & COMPOSE (Consumer must have compatible versions) =====
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-//    implementation(platform(libs.androidx.compose.bom))  // Compose BOM 2024.06.00+
-//    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-//    implementation(libs.androidx.ui.tooling.preview)
-//    implementation(libs.androidx.material3)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.navigation.compose)
 
