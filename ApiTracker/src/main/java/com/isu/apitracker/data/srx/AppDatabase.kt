@@ -9,7 +9,7 @@ import com.google.gson.reflect.TypeToken
 import com.isu.apitracker.data.model.TransactionData
 
 // Add this to your Room database class
-@Database(entities = [TransactionData::class], version = 3)
+@Database(entities = [TransactionData::class], version = 4)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDataDao(): TransactionDataDao
