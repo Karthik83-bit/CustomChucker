@@ -34,10 +34,12 @@ class ApiInterceptor(
 
     // Database initialization
     private val db = Room.databaseBuilder(
-        context,
+        context.applicationContext,
         AppDatabase::class.java,
         "app_database"
-    ).build()
+    )
+        .addMigrations(AppDatabase.MIGRATION_3_4)
+        .build()
     private val dao = db.transactionDataDao()
 
     override fun intercept(chain: Interceptor.Chain): Response {

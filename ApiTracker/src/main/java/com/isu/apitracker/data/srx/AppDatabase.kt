@@ -4,6 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.isu.apitracker.data.model.TransactionData
@@ -13,6 +15,19 @@ import com.isu.apitracker.data.model.TransactionData
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDataDao(): TransactionDataDao
+
+    companion object {
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE transaction_data ADD COLUMN request_file_path TEXT"
+                )
+                database.execSQL(
+                    "ALTER TABLE transaction_data ADD COLUMN response_file_path TEXT"
+                )
+            }
+        }
+    }
 }
 
 

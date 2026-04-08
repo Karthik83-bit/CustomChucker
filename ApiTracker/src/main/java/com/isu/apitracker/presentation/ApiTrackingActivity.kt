@@ -39,11 +39,12 @@ class ApiTrackingActivity : ComponentActivity() {
                 val navController= rememberNavController()
                 val db= Room
                     .databaseBuilder(
-                        this,
+                        applicationContext,
                         AppDatabase::class.java,
                         "app_database"
                     )
-                    .fallbackToDestructiveMigration().build()
+                    .addMigrations(AppDatabase.MIGRATION_3_4)
+                    .build()
                 val dao=db.transactionDataDao()
                 val apiTrackerRepository:Repository = RepositoryImplementation(dao)
                 val viewModelFactory= ViewModelFactory(apiTrackerRepository)
