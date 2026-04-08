@@ -1,9 +1,12 @@
 package com.isu.apitracker.presentation.screens
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,11 +23,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -50,9 +57,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.isu.apitracker.presentation.viewmodel.ApiTrackerViewModel
 import com.isu.apitracker.presentation.ApiTrackingActivity
+import com.isu.apitracker.presentation.viewmodel.ApiTrackerViewModel
 import com.isu.apitracker.util.toEm
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 
 data class ApiListDataClass(
@@ -87,6 +97,7 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
     val selectAll = remember {
         mutableStateOf(false)
     }
+    val showStatusMenu = remember { mutableStateOf(false) }
     val context= LocalContext.current
     val activity= context as ApiTrackingActivity
     LaunchedEffect(key1 = Unit) {
@@ -132,29 +143,103 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
 
             }
         } else {
-            Row(
+            Column(
                 modifier = Modifier
-                    .height(50.dp)
                     .shadow(1.dp)
-                    .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxWidth()
+                    .background(Color.White)
             ) {
                 Row {
-
-                    IconButton(onClick = {
-                        activity.finish()
-                    }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "")
+                    Row(
+                        modifier = Modifier
+                            .height(56.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = {
+                            activity.finish()
+                        }) {
+                            Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "")
+                        }
+                        OutlinedTextField(
+                            value = viewModel.searchQuery.value,
+                            onValueChange = viewModel::updateSearchQuery,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 8.dp),
+                            singleLine = true,
+                            label = {
+                                Text(lineHeight = 12.sp.toEm(), text = "Search")
+                            },
+                            placeholder = {
+                                Text(lineHeight = 12.sp.toEm(), text = "API / Method / URL")
+                            }
+                        )
+                        IconButton(onClick = {
+                            pickDateTimeRange(
+                                context = context,
+                                onFromSelected = viewModel::updateFromDateTime,
+                                onToSelected = viewModel::updateToDateTime
+                            )
+                        }) {
+                            Icon(imageVector = Icons.Default.FilterList, contentDescription = "Filter by date and time")
+                        }
                     }
                 }
-                Row {
-
-                    IconButton(onClick = {
-                        viewModel.deleteAllApi()
-                    }) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        lineHeight = 12.sp.toEm(),
+                        text = buildDateRangeSummary(viewModel.fromDateTime.value, viewModel.toDateTime.value),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box {
+                            TextButton(onClick = {
+                                showStatusMenu.value = true
+                            }) {
+                                Text(
+                                    lineHeight = 12.sp.toEm(),
+                                    text = "Status: ${viewModel.selectedStatusCode.value}"
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select status code"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showStatusMenu.value,
+                                onDismissRequest = { showStatusMenu.value = false }
+                            ) {
+                                viewModel.getAvailableStatusCodes().forEach { code ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(lineHeight = 12.sp.toEm(), text = code)
+                                        },
+                                        onClick = {
+                                            viewModel.updateSelectedStatusCode(code)
+                                            showStatusMenu.value = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        TextButton(onClick = viewModel::clearFilters) {
+                            Text(lineHeight = 12.sp.toEm(), text = "Clear")
+                        }
+                        IconButton(onClick = {
+                            viewModel.deleteAllApi()
+                        }) {
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = "")
+                        }
                     }
                 }
-
             }
         }
     }) { padding ->
@@ -163,10 +248,6 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                 .fillMaxSize()
                 .padding(top = padding.calculateTopPadding())
         ) {
-            item {
-                FilterSection(viewModel)
-            }
-
             items(viewModel.visibleApiList.reversed()) {
                 ApiListItem(
                     data = it,
@@ -192,80 +273,60 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
     }
 }
 
-@Composable
-private fun FilterSection(viewModel: ApiTrackerViewModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        OutlinedTextField(
-            value = viewModel.searchQuery.value,
-            onValueChange = viewModel::updateSearchQuery,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = {
-                Text(lineHeight = 12.sp.toEm(), text = "Search API / Method / Status")
-            },
-            placeholder = {
-                Text(lineHeight = 12.sp.toEm(), text = "ex: users, GET, 404")
-            }
-        )
+private fun buildDateRangeSummary(from: String, to: String): String {
+    return when {
+        from.isBlank() && to.isBlank() -> "All date/time"
+        from.isNotBlank() && to.isNotBlank() -> "$from to $to"
+        from.isNotBlank() -> "From $from"
+        else -> "Until $to"
+    }
+}
 
-        OutlinedTextField(
-            value = viewModel.statusCodeFilter.value,
-            onValueChange = viewModel::updateStatusCodeFilter,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = {
-                Text(lineHeight = 12.sp.toEm(), text = "Filter By Status Code")
-            },
-            placeholder = {
-                Text(lineHeight = 12.sp.toEm(), text = "ex: 200, 404, 500")
-            }
-        )
-
-        OutlinedTextField(
-            value = viewModel.fromDateTime.value,
-            onValueChange = viewModel::updateFromDateTime,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = {
-                Text(lineHeight = 12.sp.toEm(), text = "From Date Time")
-            },
-            placeholder = {
-                Text(lineHeight = 12.sp.toEm(), text = "08 Apr 2026 14:30:00")
-            }
-        )
-
-        OutlinedTextField(
-            value = viewModel.toDateTime.value,
-            onValueChange = viewModel::updateToDateTime,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = {
-                Text(lineHeight = 12.sp.toEm(), text = "To Date Time")
-            },
-            placeholder = {
-                Text(lineHeight = 12.sp.toEm(), text = "08 Apr 2026 18:00:00")
-            }
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                lineHeight = 12.sp.toEm(),
-                text = "Showing ${viewModel.visibleApiList.size} of ${viewModel.apiList.size}"
-            )
-            TextButton(onClick = viewModel::clearFilters) {
-                Text(lineHeight = 12.sp.toEm(), text = "Clear")
-            }
+private fun pickDateTimeRange(
+    context: android.content.Context,
+    onFromSelected: (String) -> Unit,
+    onToSelected: (String) -> Unit
+) {
+    pickDateTime(context) { fromValue ->
+        onFromSelected(fromValue)
+        pickDateTime(context) { toValue ->
+            onToSelected(toValue)
         }
     }
+}
+
+private fun pickDateTime(
+    context: android.content.Context,
+    onDateTimeSelected: (String) -> Unit
+) {
+    val calendar = Calendar.getInstance()
+    DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val dateCalendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, year)
+                set(Calendar.MONTH, month)
+                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            }
+            TimePickerDialog(
+                context,
+                { _, hourOfDay, minute ->
+                    dateCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                    dateCalendar.set(Calendar.MINUTE, minute)
+                    dateCalendar.set(Calendar.SECOND, 0)
+                    val formatted = SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.getDefault())
+                        .format(dateCalendar.time)
+                    onDateTimeSelected(formatted)
+                },
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE),
+                true
+            ).show()
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    ).show()
 }
 
 @OptIn(ExperimentalFoundationApi::class)
