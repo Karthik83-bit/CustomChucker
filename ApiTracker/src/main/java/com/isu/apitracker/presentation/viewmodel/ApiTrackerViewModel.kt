@@ -44,7 +44,7 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
     val visibleApiList = mutableStateListOf<ApiListDataClass>()
     val selectedApiToDelete = mutableStateListOf<Int>()
     val searchQuery = mutableStateOf("")
-    val statusCodeFilter = mutableStateOf("")
+    val selectedStatusCode = mutableStateOf("All")
     val fromDateTime = mutableStateOf("")
     val toDateTime = mutableStateOf("")
 
@@ -122,8 +122,8 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
         applyFilters()
     }
 
-    fun updateStatusCodeFilter(value: String) {
-        statusCodeFilter.value = value
+    fun updateSelectedStatusCode(value: String) {
+        selectedStatusCode.value = value
         applyFilters()
     }
 
@@ -134,7 +134,7 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
 
     fun clearFilters() {
         searchQuery.value = ""
-        statusCodeFilter.value = ""
+        selectedStatusCode.value = "All"
         fromDateTime.value = ""
         toDateTime.value = ""
         applyFilters()
@@ -142,7 +142,7 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
 
     private fun applyFilters() {
         val query = searchQuery.value.trim().lowercase(Locale.getDefault())
-        val statusCodeQuery = statusCodeFilter.value.trim()
+        val statusCodeQuery = selectedStatusCode.value.trim()
         val fromMillis = parseUserDateTime(fromDateTime.value.trim())
         val toMillis = parseUserDateTime(toDateTime.value.trim())
 
@@ -155,7 +155,7 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
             ).joinToString(" ").lowercase(Locale.getDefault())
 
             val matchesSearch = query.isBlank() || searchableText.contains(query)
-            val matchesStatusCode = statusCodeQuery.isBlank() || item.statusCode.contains(statusCodeQuery)
+            val matchesStatusCode = statusCodeQuery == "All" || item.statusCode == statusCodeQuery
             val itemDateTime = parseListItemDateTime(item)
             val matchesFrom = fromMillis == null || (itemDateTime != null && itemDateTime >= fromMillis)
             val matchesTo = toMillis == null || (itemDateTime != null && itemDateTime <= toMillis)
@@ -165,6 +165,13 @@ class ApiTrackerViewModel(val repository: Repository) : ViewModel() {
 
         visibleApiList.clear()
         visibleApiList.addAll(filtered)
+    }
+
+    fun getAvailableStatusCodes(): List<String> {
+        val codes = apiList.map { it.statusCode }
+            .distinct()
+            .sorted()
+        return listOf("All") + codes
     }
 
     private fun parseListItemDateTime(item: ApiListDataClass): Long? {
