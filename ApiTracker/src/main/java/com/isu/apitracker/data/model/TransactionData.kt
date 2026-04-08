@@ -42,5 +42,10 @@ data class TransactionData(
     @ColumnInfo(name = "decoderResponse")
     val decoderResponse: List<String?>,
 
+    @ColumnInfo(name = "request_file_path")
+    val requestFilePath: String? = null,
+
+    @ColumnInfo(name = "response_file_path")
+    val responseFilePath: String? = null,
 
 )

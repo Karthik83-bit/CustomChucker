@@ -12,6 +12,8 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -26,15 +28,20 @@ import java.util.TimeZone
 class ApiInterceptor(
     private val context: Context,
     private val listOfDecoder: List<BodyDecoder>? = null,
-    private val listOfEcludedUrlForDEcoding:List<String>?=null
+    private val listOfEcludedUrlForDEcoding:List<String>?=null,
+    private val maxContentLength: Long = 1024 * 1024 // 1MB default limit
 ) : Interceptor {
+    // Keep SQLite rows small; larger payloads are stored as files and referenced by path.
+    private val maxInlineStorageLength: Long = 100 * 1024
 
     // Database initialization
     private val db = Room.databaseBuilder(
-        context,
+        context.applicationContext,
         AppDatabase::class.java,
         "app_database"
-    ).build()
+    )
+        .addMigrations(AppDatabase.MIGRATION_3_4)
+        .build()
     private val dao = db.transactionDataDao()
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -45,25 +52,23 @@ class ApiInterceptor(
 
         val requestHeaders=request.headers.toMultimap()
         val requestString=request.body?.toStringRepresentation()
-        Log.d("gsonreq", "intercept: ${request.body?.toStringRepresentation()}")
-        Log.d("gsonreq", "intercept: ${request.body?.toStringRepresentation()}")
         val response = chain.proceed(request)
         val endTime = System.nanoTime()
         val responseHeaders=response.headers.toMultimap()
-        val responseBodyString = response.body.string()
+        val responseBodyString = response.body?.string()
         showNotification(response, request)
         //to avoid consumption of interceptor
 
         val newResponseToReturn = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
-            .body(responseBodyString.toResponseBody(response.body.contentType()))
+            .body(responseBodyString?.toResponseBody(response.body?.contentType()))
 
             .build()
         val newResponse = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
-            .body(responseBodyString.toResponseBody(response.body.contentType()))
+            .body(responseBodyString?.toResponseBody(response.body?.contentType()))
             .build()
         val duration = (endTime - startTime) / 1_000_000.0
         val startTimeString = getCurrentTime()
@@ -74,7 +79,7 @@ class ApiInterceptor(
             startTimeString = startTimeString,
             requestBody = requestString ?: "",
             requestHeaders = requestHeaders,
-            responseBody = responseBodyString,
+            responseBody = responseBodyString?:"",
             responseHeaders = responseHeaders,
             listOfEcludedUrlForDEcoding
         )
@@ -151,27 +156,60 @@ class ApiInterceptor(
                 }
             }
 
-
+            // Handle large bodies: if over limit, save to file
+            val (finalRequestBody, requestFilePath) = handleLargeContent(requestBody, "request_${System.currentTimeMillis()}", maxContentLength)
+            val (finalResponseBody, responseFilePath) = handleLargeContent(responseBody, "response_${System.currentTimeMillis()}", maxContentLength)
 
             val transactionData = TransactionData(
                 url = request.url.toString(),
                 method = request.method,
                 statusCode = response.code.toString(),
-                request = requestBody,
-                response = responseBody,
+                request = finalRequestBody,
+                response = finalResponseBody,
                 time = duration.toString(),
                 decoderRequest = decodedRequest,
                 recordTime = startTimeString,
                 decoderResponse = decodedResponse,
                 requestHeaders =requestHeaders,
                 responseHeaders =responseHeaders,
+                requestFilePath = requestFilePath,
+                responseFilePath = responseFilePath,
 
             )
 
-            dao.insert(transactionData)
+            // Use coroutine to avoid blocking main thread
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                dao.insert(transactionData)
+            }
         } catch (e: Exception) {
             Log.e("ApiInterceptor", "Error saving transaction data", e)
         }
+    }
+
+    private fun truncateIfNeeded(content: String, maxLength: Long): String {
+        return if (content.length > maxLength) {
+            content.substring(0, maxLength.toInt()) + "\n\n[Content truncated due to size limit]"
+        } else {
+            content
+        }
+    }
+
+    private fun handleLargeContent(content: String, fileName: String, maxLength: Long): Pair<String, String?> {
+        val inlineLimit = minOf(maxLength, maxInlineStorageLength)
+        return if (content.length > inlineLimit) {
+            // Save to file
+            val filePath = saveContentToFile(content, fileName)
+            Pair("[Content saved to file: $filePath]", filePath)
+        } else {
+            Pair(content, null)
+        }
+    }
+
+    private fun saveContentToFile(content: String, fileName: String): String {
+        val file = java.io.File(context.getExternalFilesDir("api_logs"), "$fileName.txt")
+        file.parentFile?.mkdirs()
+        file.writeText(content)
+        return file.absolutePath
     }
 }
 

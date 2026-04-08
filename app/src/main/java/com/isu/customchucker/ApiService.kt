@@ -30,7 +30,7 @@ interface ApiService {
         private fun getClient(context: Context): OkHttpClient {
             val client=OkHttpClient
                 .Builder()
-                .addInterceptor(ApiInterceptor(context=context, listOfDecoder = listOf(EncryptDecryptDecoder())))
+                .addInterceptor(ApiInterceptor(context=context, listOfDecoder = listOf(EncryptDecryptDecoder()), maxContentLength = 500 * 1024)) // 500KB limit
                 .build()
             return client
         }
