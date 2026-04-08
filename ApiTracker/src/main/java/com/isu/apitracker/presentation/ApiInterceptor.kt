@@ -159,13 +159,10 @@ class ApiInterceptor(
 
             // Handle large bodies: if over limit, save to file
             val (finalRequestBody, requestFilePath) = handleLargeContent(requestBody, "request_${System.currentTimeMillis()}", maxContentLength)
-            val shouldForceResponseFile = response.code >= 400
             val (finalResponseBody, responseFilePath) = handleLargeContent(
                 content = responseBody,
                 fileName = "response_${System.currentTimeMillis()}",
-                maxLength = maxContentLength,
-                forceFileStorage = shouldForceResponseFile,
-                fileReason = "HTTP ${response.code}"
+                maxLength = maxContentLength
             )
 
             val transactionData = TransactionData(
@@ -207,16 +204,13 @@ class ApiInterceptor(
     private fun handleLargeContent(
         content: String,
         fileName: String,
-        maxLength: Long,
-        forceFileStorage: Boolean = false,
-        fileReason: String? = null
+        maxLength: Long
     ): Pair<String, String?> {
         val inlineLimit = minOf(maxLength, maxInlineStorageLength)
-        return if (forceFileStorage || content.length > inlineLimit) {
+        return if (content.length > inlineLimit) {
             // Save to file
             val filePath = saveContentToFile(content, fileName)
-            val reasonSuffix = fileReason?.let { " ($it)" } ?: ""
-            Pair("[Content saved to file$reasonSuffix: $filePath]", filePath)
+            Pair("[Content saved to file: $filePath]", filePath)
         } else {
             Pair(content, null)
         }
