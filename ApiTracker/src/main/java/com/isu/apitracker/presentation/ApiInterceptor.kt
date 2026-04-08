@@ -56,7 +56,6 @@ class ApiInterceptor(
         val endTime = System.nanoTime()
         val responseHeaders=response.headers.toMultimap()
         val responseBodyString = response.body?.string()
-        showNotification(response, request)
         //to avoid consumption of interceptor
 
         val newResponseToReturn = response.newBuilder()
@@ -72,7 +71,7 @@ class ApiInterceptor(
             .build()
         val duration = (endTime - startTime) / 1_000_000.0
         val startTimeString = getCurrentTime()
-        saveTransactionData(
+        val responseFilePath = saveTransactionData(
             request=request,
             response=newResponse,
             duration = duration,
@@ -83,6 +82,7 @@ class ApiInterceptor(
             responseHeaders = responseHeaders,
             listOfEcludedUrlForDEcoding
         )
+        showNotification(response, request, responseFilePath)
 
         return newResponseToReturn
     }
@@ -93,9 +93,10 @@ class ApiInterceptor(
      * @param response the API response
      * @param request the API request
      */
-    private fun showNotification(response: Response, request: Request) {
+    private fun showNotification(response: Response, request: Request, responseFilePath: String? = null) {
         NotificationHelper(context).showNotification(
-            "${response.code} ${request.method} ${request.url}"
+            "${response.code} ${request.method} ${request.url}",
+            responseFilePath
         )
     }
 
@@ -134,7 +135,7 @@ class ApiInterceptor(
         listOfEcludedUrlForDEcoding: List<String>?
 
 
-    ) {
+    ): String? {
         try {
             val decodedRequest: MutableList<String?> = mutableListOf()
             val decodedResponse: MutableList<String?> = mutableListOf()
@@ -158,7 +159,14 @@ class ApiInterceptor(
 
             // Handle large bodies: if over limit, save to file
             val (finalRequestBody, requestFilePath) = handleLargeContent(requestBody, "request_${System.currentTimeMillis()}", maxContentLength)
-            val (finalResponseBody, responseFilePath) = handleLargeContent(responseBody, "response_${System.currentTimeMillis()}", maxContentLength)
+            val shouldForceResponseFile = response.code >= 400
+            val (finalResponseBody, responseFilePath) = handleLargeContent(
+                content = responseBody,
+                fileName = "response_${System.currentTimeMillis()}",
+                maxLength = maxContentLength,
+                forceFileStorage = shouldForceResponseFile,
+                fileReason = "HTTP ${response.code}"
+            )
 
             val transactionData = TransactionData(
                 url = request.url.toString(),
@@ -181,8 +189,10 @@ class ApiInterceptor(
             kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 dao.insert(transactionData)
             }
+            return responseFilePath
         } catch (e: Exception) {
             Log.e("ApiInterceptor", "Error saving transaction data", e)
+            return null
         }
     }
 
@@ -194,12 +204,19 @@ class ApiInterceptor(
         }
     }
 
-    private fun handleLargeContent(content: String, fileName: String, maxLength: Long): Pair<String, String?> {
+    private fun handleLargeContent(
+        content: String,
+        fileName: String,
+        maxLength: Long,
+        forceFileStorage: Boolean = false,
+        fileReason: String? = null
+    ): Pair<String, String?> {
         val inlineLimit = minOf(maxLength, maxInlineStorageLength)
-        return if (content.length > inlineLimit) {
+        return if (forceFileStorage || content.length > inlineLimit) {
             // Save to file
             val filePath = saveContentToFile(content, fileName)
-            Pair("[Content saved to file: $filePath]", filePath)
+            val reasonSuffix = fileReason?.let { " ($it)" } ?: ""
+            Pair("[Content saved to file$reasonSuffix: $filePath]", filePath)
         } else {
             Pair(content, null)
         }

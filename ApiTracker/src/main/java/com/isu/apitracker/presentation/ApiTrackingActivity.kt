@@ -2,6 +2,7 @@ package com.isu.apitracker.presentation
 
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -24,6 +25,7 @@ import com.isu.apitracker.presentation.screens.ApiListScreen
 import com.isu.apitracker.presentation.screens.RequestResponseScreen
 import com.isu.apitracker.presentation.ui.theme.CustomChuckerTheme
 import com.isu.apitracker.util.toEm
+import com.isu.apitracker.util.NotificationHelper
 
 
 class ApiTrackingActivity : ComponentActivity() {
@@ -31,8 +33,7 @@ class ApiTrackingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
-
+        maybeShowFilePath(intent?.getStringExtra(NotificationHelper.EXTRA_RESPONSE_FILE_PATH))
 
         setContent {
             CustomChuckerTheme {
@@ -60,6 +61,17 @@ class ApiTrackingActivity : ComponentActivity() {
                 }
 
             }
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        maybeShowFilePath(intent.getStringExtra(NotificationHelper.EXTRA_RESPONSE_FILE_PATH))
+    }
+
+    private fun maybeShowFilePath(filePath: String?) {
+        if (!filePath.isNullOrBlank()) {
+            Toast.makeText(this, "Response saved at: $filePath", Toast.LENGTH_LONG).show()
         }
     }
 }

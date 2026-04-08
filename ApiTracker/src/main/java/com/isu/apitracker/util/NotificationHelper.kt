@@ -16,6 +16,7 @@ class NotificationHelper(val context: Context) {
         private const val TRANSACTIONS_CHANNEL_ID = "api_tracker"
         private const val TRANSACTION_NOTIFICATION_ID = 1138
         private const val INTENT_REQUEST_CODE = 11
+        const val EXTRA_RESPONSE_FILE_PATH = "com.isu.apitracker.extra.RESPONSE_FILE_PATH"
         private  var mNotificationManager:NotificationManager?= null
     }
     init {
@@ -36,12 +37,16 @@ class NotificationHelper(val context: Context) {
 
     }
 
-    fun showNotification(content:String){
+    fun showNotification(content:String, responseFilePath: String? = null){
         val pendingIntentToTrackingActivity= PendingIntent.getActivity(
             context,
-            /* requestCode = */ 0,
-            Intent(context, ApiTrackingActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT)
+            INTENT_REQUEST_CODE,
+            Intent(context, ApiTrackingActivity::class.java).apply {
+                responseFilePath?.let {
+                    putExtra(EXTRA_RESPONSE_FILE_PATH, it)
+                }
+            },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
 
 
@@ -51,6 +56,7 @@ class NotificationHelper(val context: Context) {
             .setContentIntent(pendingIntentToTrackingActivity)
             .setContentTitle("Recorded API")
             .setContentText(content)
+            .setAutoCancel(true)
         val notification = builder.build()
         mNotificationManager?.notify(TRANSACTION_NOTIFICATION_ID, notification)
 
