@@ -20,24 +20,30 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -50,6 +56,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Green
 import androidx.compose.ui.graphics.Color.Companion.Red
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -104,7 +111,8 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
         viewModel.getAllApi()
     }
 
-    Scaffold(containerColor = Color.White, topBar = {
+    Scaffold(containerColor = Color.White,
+        topBar = {
         if (addItemsToDelete.value) {
             Row(
                 modifier = Modifier
@@ -149,10 +157,10 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                     .fillMaxWidth()
                     .background(Color.White)
             ) {
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Row(
                         modifier = Modifier
-                            .height(56.dp)
+                            .wrapContentHeight()
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -162,12 +170,19 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                         }) {
                             Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "")
                         }
-                        OutlinedTextField(
+                        TextField(
                             value = viewModel.searchQuery.value,
                             onValueChange = viewModel::updateSearchQuery,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = White,
+                                unfocusedContainerColor = White,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor =Color.Transparent,
+
+                            ),
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 8.dp),
+                                .padding(horizontal = 2.dp),
                             singleLine = true,
                             label = {
                                 Text(lineHeight = 12.sp.toEm(), text = "Search")
@@ -175,31 +190,54 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                             placeholder = {
                                 Text(lineHeight = 12.sp.toEm(), text = "API / Method / URL")
                             }
+                            , trailingIcon = {
+                                IconButton(onClick = viewModel::clearFilters) {
+                                    Icon(Icons.Default.Close, contentDescription = "")
+                                }
+
+                            }
                         )
-                        IconButton(onClick = {
+                  /*      IconButton(onClick = {
                             pickDateTimeRange(
                                 context = context,
                                 onFromSelected = viewModel::updateFromDateTime,
                                 onToSelected = viewModel::updateToDateTime
                             )
                         }) {
-                            Icon(imageVector = Icons.Default.FilterList, contentDescription = "Filter by date and time")
-                        }
+                            Icon(imageVector = Icons.Default.List, contentDescription = "Filter by date and time")
+                        }*/
+//                        IconButton(onClick = {
+//                            pickDateTimeRange(
+//                                context = context,
+//                                onFromSelected = viewModel::updateFromDateTime,
+//                                onToSelected = viewModel::updateToDateTime
+//                            )
+//                        }) {
+//
+//                            Icon(imageVector = Icons.Default.DateRange, contentDescription = "Filter by date and time")
+//                        }
+
                     }
                 }
-                Row(
+              /*  Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     Text(
                         lineHeight = 12.sp.toEm(),
-                        text = buildDateRangeSummary(viewModel.fromDateTime.value, viewModel.toDateTime.value),
+                        text = viewModel.fromDateTime.value,
                         modifier = Modifier.weight(1f)
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        lineHeight = 12.sp.toEm(),
+                        text =  viewModel.toDateTime.value,
+                        modifier = Modifier.weight(1f)
+                    )
+                  *//*  Row(verticalAlignment = Alignment.CenterVertically) {
                         Box {
                             TextButton(onClick = {
                                 showStatusMenu.value = true
@@ -238,11 +276,21 @@ fun ApiListScreen(navController: NavHostController, viewModel: ApiTrackerViewMod
                         }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "")
                         }
-                    }
-                }
+                    }*//*
+                }*/
             }
         }
-    }) { padding ->
+    }, floatingActionButton = {
+        FloatingActionButton(
+            onClick = {
+                viewModel.deleteAllApi()
+
+            }
+        ) {
+            Icon(imageVector = Icons.Default.Delete, contentDescription = "")
+        }
+
+        }) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

@@ -112,7 +112,7 @@ class MainActivity : ComponentActivity() {
                           scope.launch {
                               text.value = "Calling delayed 404 flow..."
                               delay(500)
-                              text.value = callRawApi("https://httpstat.us/404")
+                              text.value = callRawApi("https://dummyjson.com/kitees/999999")
                           }
                       }) {
                           Text(lineHeight=14.sp.toEm(), text = "404 Notification Test")

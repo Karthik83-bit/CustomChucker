@@ -61,13 +61,13 @@ class ApiInterceptor(
         val newResponseToReturn = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
-            .body(responseBodyString?.toResponseBody(response.body?.contentType()))
+            .body((responseBodyString?:"").toResponseBody(response.body?.contentType()))
 
             .build()
         val newResponse = response.newBuilder()
             .headers(response.headers)
             .code(response.code)
-            .body(responseBodyString?.toResponseBody(response.body?.contentType()))
+            .body((responseBodyString?:"").toResponseBody(response.body?.contentType()))
             .build()
         val duration = (endTime - startTime) / 1_000_000.0
         val startTimeString = getCurrentTime()

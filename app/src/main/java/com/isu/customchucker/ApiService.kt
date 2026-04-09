@@ -44,7 +44,7 @@ interface ApiService {
     @GET
     suspend fun getRawResponse(@Url url: String): Response<ResponseBody>
 
-    @POST("/card/generate_otp")
+    @POST("/card/generate_otp/demo/test")
     suspend fun generateOTP(@Body request: EncryptedData,
                             @Header("Authorization") token: String="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWRpcmVjdFVyaSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2OC8jL3YxL2Rhc2hib2FyZC9hbmFseXRpY3MiLCJiYW5rQ29kZSI6ImZpbm8iLCJwcml2aWxlZ2VzIjpbIjUwMCIsIjUwNCIsIjE5IiwiMTgiXSwiaXMyRkFFbmFibGVkIjp0cnVlLCJ1c2VyX25hbWUiOiJDVVNUODQ1NjgzNTAwMiIsIm1vYmlsZU51bWJlciI6ODQ1NjgzNTAwMiwiY3JlYXRlZCI6MTcyMjkxNjE2NjE1OSwiaXNCaW9BdXRoUmVxdWlyZWQiOnRydWUsInBhcmVudFVzZXJOYW1lIjoiQ09SUDk4NTM1MzcwODYiLCJhdXRob3JpdGllcyI6WyJST0xFX1JFVEFJTEVSIl0sImNsaWVudF9pZCI6ImlzdS1maW5vLWNsaWVudCIsImFkbWluTmFtZSI6ImZpbm9fYWRtaW4iLCJpc1Bhc3N3b3JkUmVzZXRSZXF1aXJlZCI6ZmFsc2UsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSJdLCJleHAiOjE3MjI5MTc5NjYsImp0aSI6ImRPak1UMFZpTEFpekpVbl9EQkI5Z3RBcW5SZyJ9.jD37hdpsf7CM1h9eYMIOdW7PpPWDqSvzqLVrEKeOck5YMMfq7w_6uwg1llTbId3AHYoEHKPePg8_imYCfSqfovSskUReQa7KmSgbGpN-o5Ew9UWIcNct4P-6c3YDUe8Jz21TbNGbNabh2eE8cNyWSbA6Y0-D8CiKh_i--vmtMOWbACdqgM6poY_R6BP3Yh6gDIplIqc3VUpgHt3AQyAzIWtzDcvtKJvqjZ1gqj-K_rqdWCMDPDkKy3X4MXor5crGfbr1ZCSTwQaTocY2NSO7fDydlJ4_KNpFGZD3zVFZ2CyiMfnYF33b3g5lvjerTCguzzg1o3SX9cfeqXrynirAkg"): Response<EncryptedResponse>
 
